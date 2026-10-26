@@ -1,40 +1,45 @@
 # WattMonitor
 
-Aplikasi desktop Windows ringan berbasis C# / WPF untuk memantau konsumsi daya listrik (Watt), temperatur hardware PC, serta estimasi pengeluaran biaya listrik (Tarif PLN Rp/kWh) secara real-time.
+Aplikasi desktop Windows ringan buat mantau konsumsi daya (Watt), suhu CPU/GPU, dan estimasi biaya listrik PLN secara real-time langsung di layar. Cocok buat yang mau ngecek PC lagi nyedot berapa watt pas idle, gaming, atau rendering tanpa perlu buka software monitoring yang berat.
 
 ---
 
-## ⚡ Fitur Utama
+### 🔥 Fitur
 
-- **Real-Time Hardware Power Monitoring**: Membaca konsumsi daya CPU, GPU, dan sensor perangkat keras lainnya.
-- **Peripherals Power Offset**: Dukungan penambahan daya konstan perangkat eksternal (monitor, kipas, motherboard, SSD) via `config.txt`.
-- **Kalkulasi Biaya Listrik**: Estimasi biaya listrik harian, bulanan, dan total pemakaian berdasarkan tarif PLN (Rp/kWh).
-- **Mode Minimalis (Overlay)**: Widget overlay ringkas di layar dengan kustomisasi font, opacity, serta batas indikator warna suhu & daya (Normal / Oranye / Merah).
-- **Laporan Pemakaian Otomatis**: Riwayat pencatatan sesi pemakaian hardware secara periodik.
-
----
-
-## 🛠️ Persyaratan Sistem
-
-- Windows 10 / Windows 11 (64-bit)
-- .NET Framework 4.7.2 atau lebih baru
-- Hak akses Administrator (diperlukan oleh sensor perangkat keras)
+- **Real-Time Watt & Suhu**: Baca konsumsi daya dan temperatur hardware (CPU, GPU) secara langsung.
+- **Kalkulasi Biaya PLN**: Hitung estimasi tagihan listrik harian sampai bulanan berdasarkan tarif per kWh yang bisa disetel sendiri.
+- **Support Peripheral**: Bisa nambahin estimasi watt perangkat eksternal (monitor, fan, motherboard, RAM) biar hitungan total makin akurat.
+- **Mode Minimalis / Overlay**: Tampilan ringkas di layar, warna indikator otomatis berubah (Normal / Oranye / Merah) kalau suhu atau watt naik.
+- **Auto-Log & Riwayat**: Catatan pemakaian tersimpan otomatis buat evaluasi tagihan listrik.
 
 ---
 
-## 🚀 Cara Menjalankan
+### 💻 Cara Pakai
 
-1. Ekstrak atau unduh rilis aplikasi.
-2. Jalankan `WattMonitor.exe` (klik kanan dan pilih *Run as administrator* jika sensor memerlukan izin elevasi).
-3. Untuk mengubah tarif listrik atau batas suhu, sesuaikan pengaturan pada file `config.txt`.
+1. Download atau clone repository ini.
+2. Jalankan `WattMonitor.exe` (klik kanan **Run as administrator** biar sensor hardware bisa kebaca penuh).
+3. Sesuaikan tarif listrik (Rp/kWh), peripheral, atau tampilan di file `config.txt`.
 
 ---
 
-## 📄 Lisensi
+### 🔨 Build dari Source
 
-Proyek ini dirilis di bawah lisensi **WattMonitor Non-Commercial License (WNCL)**.
+Tinggal jalankan file build bawaan:
 
-- ✅ **Gratis** digunakan untuk keperluan pribadi, belajar, dan riset non-komersial.
-- ❌ **Dilarang keras** memperjualbelikan, menguangkan, atau menyertakan software ini ke dalam produk berbayar/komersial baik dalam bentuk asli maupun hasil modifikasi.
+```cmd
+cd system
+build.bat
+```
 
-Lihat file [LICENSE](LICENSE) untuk ketentuan hukum selengkapnya.
+Compiler memakai `csc.exe` bawaan .NET Framework Windows, jadi tidak butuh install tooling tambahan yang ribet.
+
+---
+
+### 📜 Lisensi
+
+Software ini gratis untuk penggunaan personal.
+
+- Bebas dipakai untuk kebutuhan pribadi, riset, atau belajar.
+- **Dilarang keras** menjual, memonetisasi, atau membundel software ini (baik versi asli maupun hasil modifikasi) ke dalam produk/layanan komersial berbayar.
+
+Ketentuan lengkap cek file [LICENSE](LICENSE).
