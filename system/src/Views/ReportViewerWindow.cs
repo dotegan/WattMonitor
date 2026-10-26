@@ -86,8 +86,69 @@ namespace WattMonitor
             return selectedMonth.Year == DateTime.Now.Year && selectedMonth.Month == DateTime.Now.Month;
         }
 
+        private void ApplyModernScrollbarStyle()
+        {
+            try
+            {
+                string scrollBarStyleXaml = @"
+<Style xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
+       xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+       TargetType='{x:Type ScrollBar}'>
+    <Setter Property='Stylus.IsPressAndHoldEnabled' Value='false'/>
+    <Setter Property='Stylus.IsFlicksEnabled' Value='false'/>
+    <Setter Property='Width' Value='6'/>
+    <Setter Property='MinWidth' Value='6'/>
+    <Setter Property='Background' Value='Transparent'/>
+    <Setter Property='Template'>
+        <Setter.Value>
+            <ControlTemplate TargetType='{x:Type ScrollBar}'>
+                <Grid Background='Transparent' SnapsToDevicePixels='true'>
+                    <Track x:Name='PART_Track' IsDirectionReversed='true' EnableContextMenu='false'>
+                        <Track.DecreaseRepeatButton>
+                            <RepeatButton Command='{x:Static ScrollBar.PageUpCommand}' Opacity='0' Focusable='false'/>
+                        </Track.DecreaseRepeatButton>
+                        <Track.IncreaseRepeatButton>
+                            <RepeatButton Command='{x:Static ScrollBar.PageDownCommand}' Opacity='0' Focusable='false'/>
+                        </Track.IncreaseRepeatButton>
+                        <Track.Thumb>
+                            <Thumb>
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType='{x:Type Thumb}'>
+                                        <Border x:Name='thumbBorder'
+                                                CornerRadius='3'
+                                                Background='#5A94A3B8'
+                                                Margin='1,0,1,0'/>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property='IsMouseOver' Value='true'>
+                                                <Setter TargetName='thumbBorder' Property='Background' Value='#B494A3B8'/>
+                                            </Trigger>
+                                            <Trigger Property='IsDragging' Value='true'>
+                                                <Setter TargetName='thumbBorder' Property='Background' Value='#FF38BDF8'/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Track.Thumb>
+                    </Track>
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>";
+
+                this.Resources[typeof(ScrollBar)] = (Style)System.Windows.Markup.XamlReader.Parse(scrollBarStyleXaml);
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Gagal memuat custom modern scrollbar style", ex);
+            }
+        }
+
         private void BuildUI()
         {
+            ApplyModernScrollbarStyle();
+
             Border rootCard = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(11, 15, 25)), // #0B0F19
