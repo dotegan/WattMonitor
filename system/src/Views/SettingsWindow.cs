@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -79,19 +80,76 @@ namespace WattMonitor
             this.WindowStyle = WindowStyle.None;
             this.AllowsTransparency = true;
             this.Background = Brushes.Transparent;
-            this.Width = 740;
-            this.Height = 600;
-            this.MinWidth = 640;
-            this.MinHeight = 500;
+            this.Width = 410;
+            this.Height = 560;
+            this.MinWidth = 360;
+            this.MinHeight = 460;
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.ResizeMode = ResizeMode.CanResizeWithGrip;
 
             this.onSettingsApplied = onApplied;
             this.workingPeripherals = new Dictionary<string, double>(Config.StaticPeripherals);
 
+            ApplyModernScrollbarStyle();
             BuildUI();
             LoadCurrentValues();
             SelectTab(0);
+        }
+
+        private void ApplyModernScrollbarStyle()
+        {
+            try
+            {
+                string scrollBarStyleXaml = @"
+<Style xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
+       xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+       TargetType='{x:Type ScrollBar}'>
+    <Setter Property='Stylus.IsPressAndHoldEnabled' Value='false'/>
+    <Setter Property='Stylus.IsFlicksEnabled' Value='false'/>
+    <Setter Property='Width' Value='6'/>
+    <Setter Property='MinWidth' Value='6'/>
+    <Setter Property='Background' Value='Transparent'/>
+    <Setter Property='Template'>
+        <Setter.Value>
+            <ControlTemplate TargetType='{x:Type ScrollBar}'>
+                <Grid Background='Transparent' SnapsToDevicePixels='true'>
+                    <Track x:Name='PART_Track' IsDirectionReversed='true' EnableContextMenu='false'>
+                        <Track.DecreaseRepeatButton>
+                            <RepeatButton Command='{x:Static ScrollBar.PageUpCommand}' Opacity='0' Focusable='false'/>
+                        </Track.DecreaseRepeatButton>
+                        <Track.IncreaseRepeatButton>
+                            <RepeatButton Command='{x:Static ScrollBar.PageDownCommand}' Opacity='0' Focusable='false'/>
+                        </Track.IncreaseRepeatButton>
+                        <Track.Thumb>
+                            <Thumb>
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType='{x:Type Thumb}'>
+                                        <Border x:Name='thumbBorder'
+                                                CornerRadius='3'
+                                                Background='#5A94A3B8'
+                                                Margin='1,0,1,0'/>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property='IsMouseOver' Value='true'>
+                                                <Setter TargetName='thumbBorder' Property='Background' Value='#B494A3B8'/>
+                                            </Trigger>
+                                            <Trigger Property='IsDragging' Value='true'>
+                                                <Setter TargetName='thumbBorder' Property='Background' Value='#FF38BDF8'/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Track.Thumb>
+                    </Track>
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>";
+
+                this.Resources[typeof(ScrollBar)] = (Style)System.Windows.Markup.XamlReader.Parse(scrollBarStyleXaml);
+            }
+            catch { }
         }
 
         private void BuildUI()
@@ -166,19 +224,19 @@ namespace WattMonitor
             };
 
             StackPanel tabSp = new StackPanel { Orientation = Orientation.Horizontal };
-            tabBtnGeneral = CreateTabButton("Umum & Tarif", LucideIcon.Zap, 0, out tabTxtGeneral);
+            tabBtnGeneral = CreateTabButton("Tarif", LucideIcon.Zap, 0, out tabTxtGeneral);
             tabSp.Children.Add(tabBtnGeneral);
 
-            tabBtnDisplay = CreateTabButton("Tampilan", LucideIcon.Monitor, 1, out tabTxtDisplay);
+            tabBtnDisplay = CreateTabButton("Layar", LucideIcon.Monitor, 1, out tabTxtDisplay);
             tabSp.Children.Add(tabBtnDisplay);
 
-            tabBtnThreshold = CreateTabButton("Threshold Sensor", LucideIcon.Thermometer, 2, out tabTxtThreshold);
+            tabBtnThreshold = CreateTabButton("Batas", LucideIcon.Thermometer, 2, out tabTxtThreshold);
             tabSp.Children.Add(tabBtnThreshold);
 
-            tabBtnPeripheral = CreateTabButton("Peripheral", LucideIcon.HardDrive, 3, out tabTxtPeripheral);
+            tabBtnPeripheral = CreateTabButton("Device", LucideIcon.HardDrive, 3, out tabTxtPeripheral);
             tabSp.Children.Add(tabBtnPeripheral);
 
-            tabBtnFilter = CreateTabButton("Filter Nama", LucideIcon.Activity, 4, out tabTxtFilter);
+            tabBtnFilter = CreateTabButton("Filter", LucideIcon.Activity, 4, out tabTxtFilter);
             tabSp.Children.Add(tabBtnFilter);
 
             tabBar.Child = tabSp;
@@ -232,23 +290,16 @@ namespace WattMonitor
             Grid.SetColumn(txtStatusMsg, 0);
             footerGrid.Children.Add(txtStatusMsg);
 
-            // Action Buttons
+            // Action Buttons (Pure Icon Buttons with Tooltips)
             StackPanel btnSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
 
-            Button btnOpenConfig = CreateOutlineButton("Buka config.txt", () =>
-            {
-                string path = Config.GetConfigPath();
-                if (File.Exists(path)) Process.Start("notepad.exe", path);
-            });
-            btnSp.Children.Add(btnOpenConfig);
-
-            Button btnReset = CreateOutlineButton("Reset Default", ResetToDefaults);
+            Button btnReset = CreateIconActionButton(LucideIcon.RotateCcw, "Reset ke Pengaturan Default", ResetToDefaults, false);
             btnSp.Children.Add(btnReset);
 
-            Button btnCancel = CreateOutlineButton("Batal", () => this.Close());
+            Button btnCancel = CreateIconActionButton(LucideIcon.X, "Batal / Tutup", () => this.Close(), false);
             btnSp.Children.Add(btnCancel);
 
-            Button btnSave = CreatePrimaryButton("Simpan Pengaturan", SaveAndApplySettings);
+            Button btnSave = CreateIconActionButton(LucideIcon.Save, "Simpan Pengaturan & Terapkan", SaveAndApplySettings, true);
             btnSp.Children.Add(btnSave);
 
             Grid.SetColumn(btnSp, 1);
@@ -267,7 +318,7 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardTariff = CreateSectionCard("⚡ Kalkulasi Tarif & Biaya Listrik", "Pengaturan tarif listrik PLN untuk kalkulasi estimasi pengeluaran.");
+            Border cardTariff = CreateSectionCard("Kalkulasi Tarif & Biaya Listrik", "Pengaturan tarif listrik PLN untuk kalkulasi estimasi pengeluaran.");
             StackPanel cardSp = new StackPanel();
 
             tbTariff = CreateInputField("Tarif Listrik (Rp / kWh):", "Contoh: 1444.70 untuk R-1/TR daya 900-1300 VA.", cardSp);
@@ -286,7 +337,7 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardDisplay = CreateSectionCard("🖥️ Window & Mode Minimalis", "Sesuaikan tingkat transparansi dan ukuran teks widget di layar.");
+            Border cardDisplay = CreateSectionCard("Window & Mode Minimalis", "Sesuaikan tingkat transparansi dan ukuran teks widget di layar.");
             StackPanel cardSp = new StackPanel();
 
             // Refresh rate slider
@@ -332,7 +383,7 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardCpu = CreateSectionCard("🔥 Batas Suhu & Daya CPU", "Teks warna indikator akan berubah dari Normal ke Oranye, lalu ke Merah.");
+            Border cardCpu = CreateSectionCard("Batas Suhu & Daya CPU", "Teks warna indikator akan berubah dari Normal ke Oranye, lalu ke Merah.");
             StackPanel spCpu = new StackPanel();
             tbCpuTempOrange = CreateInputField("Batas Suhu CPU Oranye (°C):", "Default: 55 °C", spCpu);
             tbCpuTempRed = CreateInputField("Batas Suhu CPU Merah (°C):", "Default: 68 °C", spCpu);
@@ -341,7 +392,7 @@ namespace WattMonitor
             cardCpu.Child = spCpu;
             sp.Children.Add(cardCpu);
 
-            Border cardGpu = CreateSectionCard("🎮 Batas Suhu & Daya GPU", "Ambang batas peringatan temperatur dan watt kartu grafis.");
+            Border cardGpu = CreateSectionCard("Batas Suhu & Daya GPU", "Ambang batas peringatan temperatur dan watt kartu grafis.");
             StackPanel spGpu = new StackPanel();
             tbGpuTempOrange = CreateInputField("Batas Suhu GPU Oranye (°C):", "Default: 60 °C", spGpu);
             tbGpuTempRed = CreateInputField("Batas Suhu GPU Merah (°C):", "Default: 72 °C", spGpu);
@@ -358,7 +409,7 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardList = CreateSectionCard("🔌 Perangkat Tambahan (Peripheral)", "Tambahkan konsumsi daya estimasi perangkat yang tidak memiliki sensor built-in (monitor, fan, RAM, motherboard).");
+            Border cardList = CreateSectionCard("Perangkat Tambahan (Peripheral)", "Tambahkan konsumsi daya estimasi perangkat yang tidak memiliki sensor built-in (monitor, fan, RAM, motherboard).");
             StackPanel cardSp = new StackPanel();
 
             // List container
@@ -497,7 +548,7 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardFilter = CreateSectionCard("✂️ Filter Teks Sensor", "Kata-kata berikut akan otomatis dipotong dari nama perangkat agar ringkas di HUD.");
+            Border cardFilter = CreateSectionCard("Filter Teks Sensor", "Kata-kata berikut akan otomatis dipotong dari nama perangkat agar ringkas di HUD.");
             StackPanel cardSp = new StackPanel();
 
             tbExcludeTexts = CreateInputField("Daftar Teks yang Dihapus (Pisahkan dengan koma):", "Contoh: NVIDIA GeForce, Intel Core, (TM), Processor, 8-Core", cardSp);
@@ -609,7 +660,7 @@ namespace WattMonitor
                 // Simpan ke config.txt
                 Config.Save();
 
-                txtStatusMsg.Text = "✓ Pengaturan berhasil disimpan ke config.txt dan diterapkan!";
+                txtStatusMsg.Text = "Pengaturan berhasil disimpan dan diterapkan.";
 
                 // Trigger reload pada window utama
                 if (onSettingsApplied != null) onSettingsApplied();
@@ -706,18 +757,18 @@ namespace WattMonitor
             {
                 Background = Brushes.Transparent,
                 CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(12, 6, 12, 6),
-                Margin = new Thickness(0, 0, 6, 0),
+                Padding = new Thickness(7, 4, 7, 4),
+                Margin = new Thickness(0, 0, 3, 0),
                 Cursor = Cursors.Hand
             };
 
             StackPanel sp = new StackPanel { Orientation = Orientation.Horizontal };
-            sp.Children.Add(LucideIcon.Create(iconPath, 14, new SolidColorBrush(Color.FromRgb(148, 163, 184)), false));
+            sp.Children.Add(LucideIcon.Create(iconPath, 13, new SolidColorBrush(Color.FromRgb(148, 163, 184)), false));
 
             txt = new TextBlock
             {
                 Text = " " + title,
-                FontSize = 12,
+                FontSize = 11,
                 FontFamily = new FontFamily("Segoe UI, Inter"),
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)),
@@ -781,6 +832,54 @@ namespace WattMonitor
                 tabTxtFilter.Foreground = Brushes.White;
                 scrollFilter.Visibility = Visibility.Visible;
             }
+        }
+
+        private Button CreateIconActionButton(string iconPath, string tooltip, Action onClick, bool isPrimary)
+        {
+            Button btn = new Button
+            {
+                Width = 34,
+                Height = 30,
+                Cursor = Cursors.Hand,
+                Margin = new Thickness(4, 0, 0, 0),
+                ToolTip = tooltip,
+                Focusable = false
+            };
+
+            ControlTemplate template = new ControlTemplate(typeof(Button));
+            FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border), "bd");
+            border.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
+
+            if (isPrimary)
+            {
+                border.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(2, 132, 199))); // Sky 600
+                border.SetValue(Border.BorderThicknessProperty, new Thickness(0));
+            }
+            else
+            {
+                border.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(30, 41, 59))); // Slate 800
+                border.SetValue(Border.BorderBrushProperty, new SolidColorBrush(Color.FromRgb(51, 65, 85))); // Slate 700
+                border.SetValue(Border.BorderThicknessProperty, new Thickness(1));
+            }
+
+            FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
+            cp.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            cp.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            border.AppendChild(cp);
+            template.VisualTree = border;
+
+            Trigger hoverTrigger = new Trigger { Property = Button.IsMouseOverProperty, Value = true };
+            if (isPrimary)
+                hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(3, 105, 161)), "bd")); // Sky 700
+            else
+                hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(51, 65, 85)), "bd"));
+            template.Triggers.Add(hoverTrigger);
+
+            btn.Template = template;
+            Brush iconBrush = isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+            btn.Content = LucideIcon.Create(iconPath, 15, iconBrush, false, 1.8);
+            btn.Click += (s, e) => onClick();
+            return btn;
         }
 
         private Button CreateHeaderButton(string iconPath, string tooltip, Action onClick)
