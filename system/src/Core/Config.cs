@@ -37,16 +37,22 @@ namespace WattMonitor
         };
         public static Dictionary<string, double> StaticPeripherals = new Dictionary<string, double>();
 
+        public static string GetConfigPath()
+        {
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.txt");
+            if (!File.Exists(configPath))
+            {
+                string parentConfig = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "config.txt"));
+                if (File.Exists(parentConfig)) configPath = parentConfig;
+            }
+            return configPath;
+        }
+
         public static void Load()
         {
             try
             {
-                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.txt");
-                if (!File.Exists(configPath))
-                {
-                    string parentConfig = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "config.txt"));
-                    if (File.Exists(parentConfig)) configPath = parentConfig;
-                }
+                string configPath = GetConfigPath();
                 if (!File.Exists(configPath)) return;
                 bool excludeCleared = false;
                 bool inPeripheralBlock = false;
@@ -113,6 +119,61 @@ namespace WattMonitor
                 }
             }
             catch { }
+        }
+
+        public static void Save()
+        {
+            try
+            {
+                string path = GetConfigPath();
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("# ============================================================");
+                sb.AppendLine("#  WattMonitor - config.txt");
+                sb.AppendLine("#  Semua perubahan langsung berlaku setelah disimpan / restart.");
+                sb.AppendLine("# ============================================================");
+                sb.AppendLine();
+                sb.AppendLine("General:");
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  Tariff:              {0:0.##}   # Tarif listrik (Rp/kWh)", Tariff));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  HoursPerDay:         {0:0.##}   # Estimasi jam aktif per hari", HoursPerDay));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  Autosave_Minutes:    {0:0.##}   # Interval simpan data otomatis (menit)", AutosaveMinutes));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  Watt_Offset:         {0:0.##}   # Tambahan watt tetap", WattOffset));
+                sb.AppendLine();
+                sb.AppendLine("Display:");
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  RefreshRateMs:       {0}        # Interval update tampilan (ms)", RefreshRateMs));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  Opacity:             {0:0.##}   # Transparansi window utama (0.1 - 1.0)", Opacity));
+                sb.AppendLine();
+                sb.AppendLine("Minimalist Mode:");
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  minimalist_fontsize: {0:0.##}   # Ukuran font mode minimalis (pt)", MinimalistFontSize));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  minimalist_opacity:  {0:0.##}   # Transparansi mode minimalis (0.1 - 1.0)", MinimalistOpacity));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  minimalist_width:    {0}        # Paksa lebar window (px, -1 otomatis)", MinimalistWidth));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  minimalist_height:   {0}        # Paksa tinggi window (px, -1 otomatis)", MinimalistHeight));
+                sb.AppendLine();
+                sb.AppendLine("  # Threshold Suhu & Daya (Batas perubahan warna Oranye dan Merah)");
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  cpu_temp_orange:     {0:0.##}", CpuTempOrange));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  cpu_temp_red:        {0:0.##}", CpuTempRed));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  gpu_temp_orange:     {0:0.##}", GpuTempOrange));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  gpu_temp_red:        {0:0.##}", GpuTempRed));
+                sb.AppendLine();
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  cpu_watt_orange:     {0:0.##}", CpuWattOrange));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  cpu_watt_red:        {0:0.##}", CpuWattRed));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  gpu_watt_orange:     {0:0.##}", GpuWattOrange));
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  gpu_watt_red:        {0:0.##}", GpuWattRed));
+                sb.AppendLine();
+                sb.AppendLine("Filter:");
+                sb.AppendLine("  ExcludeTexts:        " + string.Join(", ", ExcludeTexts));
+                sb.AppendLine();
+                sb.AppendLine("Peripheral:");
+                foreach (var kvp in StaticPeripherals)
+                {
+                    sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "  {0}: {1:0.##}", kvp.Key, kvp.Value));
+                }
+
+                File.WriteAllText(path, sb.ToString());
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Gagal menyimpan config.txt", ex);
+            }
         }
     }
 }

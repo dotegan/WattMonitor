@@ -53,6 +53,7 @@
     <Compile Include="Views\LucideIcon.cs" />
     <Compile Include="Views\WattMonitorWpfWindow.cs" />
     <Compile Include="Views\ReportViewerWindow.cs" />
+    <Compile Include="Views\SettingsWindow.cs" />
   </ItemGroup>
   <Target Name="RemoveMscorlibAndNlp" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>

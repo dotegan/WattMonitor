@@ -261,6 +261,9 @@ namespace WattMonitor
             // 5. Lihat Laporan
             cm.Items.Add(CreateModernMenuItem("Lihat Laporan", LucideIcon.BarChart, () => OpenReportViewer(0), new SolidColorBrush(Color.FromRgb(56, 189, 248))));
 
+            // 6. Pengaturan
+            cm.Items.Add(CreateModernMenuItem("Pengaturan", LucideIcon.Settings, () => OpenSettingsWindow(), new SolidColorBrush(Color.FromRgb(168, 85, 247))));
+
             cm.Items.Add(CreateModernMenuSeparator());
 
             // 7. Keluar
@@ -483,6 +486,9 @@ namespace WattMonitor
 
             Button btnReport = CreateIconButton(LucideIcon.BarChart, "Buka Laporan Pemakaian & Biaya", () => OpenReportViewer(0));
             actionsSp.Children.Add(btnReport);
+
+            Button btnSettings = CreateIconButton(LucideIcon.Settings, "Pengaturan", () => OpenSettingsWindow());
+            actionsSp.Children.Add(btnSettings);
             
             fullBtnPin = CreateIconButton(LucideIcon.Pin, "Pin to Top", () => TogglePin(), isPinned);
             actionsSp.Children.Add(fullBtnPin);
@@ -996,6 +1002,7 @@ namespace WattMonitor
         }
 
         private ReportViewerWindow reportViewerWindow;
+        private SettingsWindow settingsWindow;
         private double lastTotalWatt = 0;
 
         public LiveSessionSnapshot GetLiveSnapshot()
@@ -1044,6 +1051,72 @@ namespace WattMonitor
             catch (Exception ex)
             {
                 AppLogger.Error("Gagal membuka ReportViewerWindow", ex);
+            }
+        }
+
+        public void OpenSettingsWindow()
+        {
+            try
+            {
+                if (settingsWindow == null || !settingsWindow.IsLoaded)
+                {
+                    settingsWindow = new SettingsWindow(() =>
+                    {
+                        ApplyConfigChanges();
+                    });
+                    settingsWindow.Closed += (s, e) => settingsWindow = null;
+                    settingsWindow.Show();
+                }
+                else
+                {
+                    if (settingsWindow.WindowState == WindowState.Minimized)
+                        settingsWindow.WindowState = WindowState.Normal;
+                    settingsWindow.Activate();
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Gagal membuka SettingsWindow", ex);
+            }
+        }
+
+        public void ApplyConfigChanges()
+        {
+            try
+            {
+                if (currentViewMode == ViewMode.Full)
+                {
+                    this.Opacity = Config.Opacity;
+                }
+                else
+                {
+                    this.Opacity = Config.MinimalistOpacity;
+                }
+
+                if (hudTxtTotalWatt != null)
+                {
+                    hudTxtTotalWatt.FontSize = Config.MinimalistFontSize + 2;
+                    if (hudTxtCpuTemp != null) hudTxtCpuTemp.FontSize = Config.MinimalistFontSize;
+                    if (hudTxtCpuWatt != null) hudTxtCpuWatt.FontSize = Config.MinimalistFontSize;
+                    if (hudTxtGpuTemp != null) hudTxtGpuTemp.FontSize = Config.MinimalistFontSize;
+                    if (hudTxtGpuWatt != null) hudTxtGpuWatt.FontSize = Config.MinimalistFontSize;
+                    if (hudTxtKwh != null) hudTxtKwh.FontSize = Config.MinimalistFontSize;
+                    if (hudTxtCost != null) hudTxtCost.FontSize = Config.MinimalistFontSize;
+                }
+
+                if (updateTimer != null && (int)updateTimer.Interval.TotalMilliseconds != Config.RefreshRateMs)
+                {
+                    updateTimer.Interval = TimeSpan.FromMilliseconds(Config.RefreshRateMs);
+                }
+
+                if (autosaveTimer != null && Math.Abs(autosaveTimer.Interval.TotalMinutes - Config.AutosaveMinutes) > 0.001)
+                {
+                    autosaveTimer.Interval = TimeSpan.FromMinutes(Config.AutosaveMinutes);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Gagal menerapkan update konfigurasi", ex);
             }
         }
 
@@ -1405,6 +1478,11 @@ namespace WattMonitor
             {
                 try { reportViewerWindow.Close(); } catch { }
                 reportViewerWindow = null;
+            }
+            if (settingsWindow != null)
+            {
+                try { settingsWindow.Close(); } catch { }
+                settingsWindow = null;
             }
             if (updateTimer != null) updateTimer.Stop();
             if (autosaveTimer != null) autosaveTimer.Stop();
