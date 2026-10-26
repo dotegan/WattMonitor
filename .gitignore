@@ -1,0 +1,29 @@
+# ==========================================
+# WattMonitor - Git Ignore Rules
+# ==========================================
+
+# User Personal Data & Logs
+system/logs/
+system/laporan/*/
+*.log
+
+# Keep sample template report
+!system/contoh_laporan_perangkat.md
+
+# Build Outputs & Temp Files
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.pdb
+*.tmp
+
+# IDE & Editor Settings
+.vs/
+.vscode/
+.idea/
+
+# Windows OS Files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/

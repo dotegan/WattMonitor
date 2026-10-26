@@ -1,0 +1,45 @@
+# ============================================================
+#  WattMonitor - config.txt
+#  Semua perubahan langsung berlaku setelah restart aplikasi.
+# ============================================================
+
+General:
+  Tariff:              1444.70   # Tarif listrik (Rp/kWh). Default: 1444.70
+  HoursPerDay:         12        # Estimasi jam aktif per hari untuk biaya. Default: 10
+  Autosave_Minutes:    0.08      # Interval simpan data otomatis (menit, 0.08 = ~5 detik proteksi mati lampu).
+  Watt_Offset:         5         # Tambahan watt tetap (kompensasi sensor tak terbaca).
+
+Display:
+  RefreshRateMs:       500       # Interval update tampilan (ms, min: 100). Default: 500
+  Opacity:             1         # Transparansi window (0.1 - 1.0). Default: 0.9
+
+Minimalist Mode:
+  # Nilai -1 pada Width/Height berarti dimensi otomatis menyesuaikan panjang teks
+  minimalist_fontsize: 9         # Ukuran font mode minimalis (pt). Default: 11
+  minimalist_opacity:  1         # Transparansi mode minimalis (0.1 - 1.0). Default: 1
+  minimalist_width:    -1        # Paksa lebar window (px). Default: -1 (otomatis)
+  minimalist_height:   -1        # Paksa tinggi window (px). Default: -1 (otomatis)
+
+  # Threshold Suhu & Daya (Batas bawah perubahan warna Oranye dan Merah)
+  cpu_temp_orange:     55
+  cpu_temp_red:        68
+  gpu_temp_orange:     60
+  gpu_temp_red:        72
+
+  cpu_watt_orange:     45
+  cpu_watt_red:        60
+  gpu_watt_orange:     95
+  gpu_watt_red:        130
+
+Filter:
+  # Teks yang akan dipotong dari nama hardware asli (pisahkan dengan koma)
+  ExcludeTexts:        NVIDIA GeForce, (TM), Processor, Intel Core, 8-Core, 16-Core, 12-Core, 6-Core, 4-Core
+
+Peripheral:
+  # Konsumsi hardware eksternal tambahan dari spesifikasi pabrik
+  # Format: Nama Perangkat: Watt
+  LG 27GP850-B:        55
+  ADATA SX6000 Lite:   0.33
+  FAN NZXT 7x@3.84:    27
+  G.Skill Trident Z5:  5
+  ASRock B650 Pro RS:  20
