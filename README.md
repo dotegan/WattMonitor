@@ -10,7 +10,7 @@ Gak perlu buka software monitoring berat nan ribet kalau cuma mau ngecek PC lagi
 
 ---
 
-## 📸 Tampilan Antarmuka
+## 📸 Screenshots
 
 <table>
   <tr>

@@ -1064,7 +1064,7 @@ namespace WattMonitor
 
             StackPanel hwInfoSp = new StackPanel();
             hwInfoSp.Children.Add(CreateInfoRow("Mesin Pemindai", "LibreHardwareMonitorLib (Kernel Sensor Driver)", new SolidColorBrush(Color.FromRgb(56, 189, 248))));
-            hwInfoSp.Children.Add(CreateInfoRow("Arsitektur Antarmuka", "Native 64-bit WPF (.NET Framework 4.7.2)", Brushes.White));
+            hwInfoSp.Children.Add(CreateInfoRow("Arsitektur UI", "Native 64-bit WPF (.NET Framework 4.7.2)", Brushes.White));
 
             foreach (var st in Config.StaticPeripherals)
             {
