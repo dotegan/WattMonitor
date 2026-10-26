@@ -27,3 +27,6 @@ system/laporan/*/
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Local Utilities
+Push_to_GitHub.bat
