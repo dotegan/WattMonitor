@@ -40,26 +40,24 @@ Gak perlu buka software monitoring berat nan ribet kalau cuma mau ngecek PC lagi
 
 ---
 
-## 🔥 Kenapa Harus Pakai WattMonitor?
+## Fitur & Fungsi
 
-- **Real-Time Watt & Suhu**: Baca konsumsi daya dan temperatur hardware (CPU & GPU) langsung dari sensor tanpa delay.
-- **Kalkulator Tagihan PLN Instan**: Otomatis hitung estimasi pengeluaran per jam, per hari (misal aktif 10-12 jam), sampai akumulasi sebulan penuh berdasarkan tarif resmi Rp/kWh rumah lu.
-- **Support Beban Peripheral**: Kipas RGB 7 biji, monitor 27 inch 165Hz, sampai RAM kelap-kelip bisa lu daftarkan watt statisnya biar hitungan total gak meleset.
-- **Dua Mode Tampilan**:
-  - **Minimalist HUD**: Widget tipis tembus pandang di pojok layar. Gak bakal nutupin game atau IDE coding.
-  - **Full Dashboard**: Statistik lengkap dengan indikator batas warna (Normal ➔ Oranye ➔ Merah kalau PC mulai kesurupan panas).
-- **Laporan Pemakaian & Riwayat Bulanan**: Tersimpan otomatis dalam format rapi, cocok buat evaluasi kenapa tagihan listrik bulan ini mendadak bengkak.
-- **GUI Pengaturan Modern**: Atur tarif, slider transparansi, batas threshold, dan peripheral langsung lewat jendela setting tanpa perlu buka Notepad kayak jaman purba.
-- **Bukan Bloatware**: Native WPF, startup instan, konsumsi RAM tipis, dan jalan mulus di Windows 10/11.
+Aplikasi ini dibuat simpel untuk kebutuhan praktis:
+
+- **Monitoring Watt & Suhu**: Membaca konsumsi daya dan temperatur CPU serta GPU secara langsung lewat sensor hardware.
+- **Estimasi Biaya PLN**: Mengonversi daya (Watt) ke estimasi rupiah per jam, harian, sampai bulanan berdasarkan tarif listrik yang disetel.
+- **Input Perangkat Eksternal**: Bisa menambahkan watt statis untuk monitor, kipas, atau komponen lain yang tidak memiliki sensor internal.
+- **Mode HUD & Dashboard**: Tersedia mode minimalis (overlay ringkas di layar) dan mode dashboard dengan indikator warna peringatan suhu/daya.
+- **Riwayat & Laporan**: Riwayat sesi pemakaian tersimpan otomatis per bulan untuk pengecekan berkala.
+- **Pengaturan via GUI**: Konfigurasi tarif, transparansi, font, dan daftar peripheral bisa diatur langsung lewat jendela pengaturan.
 
 ---
 
 ## 💻 Cara Pakai
 
-1. Download rilisan terbaru atau clone repo ini.
-2. Klik kanan **`WattMonitor.exe`** ➔ **Run as administrator** *(Wajib hukumnya, biar sensor hardware Windows ngasih data jujur)*.
-3. Klik tombol ikon gear ⚙️ atau klik kanan widget untuk atur tarif listrik PLN rumah lu (default: Rp 1.444,70 / kWh).
-4. Nikmati hidup sambil memantau detik-detik PC lu menguras dompet secara visual.
+1. Download rilisan portable dari tab [Releases](../../releases) atau clone repo ini.
+2. Klik kanan **`WattMonitor.exe`** ➔ **Run as administrator** (diperlukan agar sensor hardware terbaca).
+3. Klik ikon gear ⚙️ atau klik kanan widget untuk menyesuaikan tarif listrik PLN (default: Rp 1.444,70 / kWh).
 
 ---
 
