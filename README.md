@@ -1,9 +1,7 @@
 # ⚡ WattMonitor
 
-> *"Daripada jaga lilin tiap malam buat bayar tagihan PLN, mending pantau watt PC lu dari awal."*
-
 <p align="center">
-  <img src="assets/meme-lilin.jpg" alt="Meme Jaga Lilin vs Tagihan Listrik" width="360" />
+  <img src="assets/meme-lilin.jpg" alt="Meme Jaga Lilin vs Tagihan Listrik" width="320" />
 </p>
 
 Aplikasi desktop Windows ringan berbasis C# WPF Native buat mantau konsumsi daya listrik (Watt), suhu CPU & GPU, serta langsung mengonversinya jadi estimasi **Rupiah tagihan PLN secara real-time**. 
@@ -14,17 +12,31 @@ Gak perlu buka software monitoring berat nan ribet kalau cuma mau ngecek PC lagi
 
 ## 📸 Tampilan Antarmuka
 
-<p align="center">
-  <img src="assets/ss-app-1.png" alt="WattMonitor Minimalist HUD" width="680" />
-</p>
-
-<p align="center">
-  <img src="assets/ss-app-2.png" alt="WattMonitor Full Dashboard & Context Menu" width="680" />
-</p>
-
-<p align="center">
-  <img src="assets/ss-app-3.png" alt="WattMonitor Laporan Pemakaian & Statistik" width="680" />
-</p>
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="assets/ss-app-1.png">
+        <img src="assets/ss-app-1.png" alt="Minimalist HUD" style="max-width: 100%;" />
+      </a>
+      <br />
+      <sub><b>Minimalist HUD</b> (Klik untuk perbesar)</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="assets/ss-app-2.png">
+        <img src="assets/ss-app-2.png" alt="Full Dashboard & Context Menu" style="max-width: 100%;" />
+      </a>
+      <br />
+      <sub><b>Full Dashboard & Menu</b> (Klik untuk perbesar)</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="assets/ss-app-3.png">
+        <img src="assets/ss-app-3.png" alt="Laporan Pemakaian & Statistik" style="max-width: 100%;" />
+      </a>
+      <br />
+      <sub><b>Laporan & Statistik</b> (Klik untuk perbesar)</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
