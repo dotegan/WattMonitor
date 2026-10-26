@@ -28,5 +28,7 @@ Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# Local Utilities
+# Local Utilities & Archives
 Push_to_GitHub.bat
+*.zip
+_release_staging/
