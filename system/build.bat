@@ -3,7 +3,7 @@ set CSC=C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 
 echo [WattMonitor] Menutup proses WattMonitor jika sedang aktif...
 taskkill /F /IM WattMonitor.exe >nul 2>&1
-timeout /t 1 /nobreak >nul
+ping 127.0.0.1 -n 2 >nul
 
 echo [WattMonitor] Compiling WPF Native Modern with SettingsWindow...
 %CSC% /nologo /target:winexe /win32icon:"assets\wattmonitor.ico" /out:"WattMonitor.exe" /lib:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\WPF","C:\Windows\Microsoft.NET\Framework64\v4.0.30319" /reference:System.dll /reference:System.Core.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll /reference:System.Management.dll /reference:PresentationCore.dll /reference:PresentationFramework.dll /reference:WindowsBase.dll /reference:System.Xaml.dll /reference:"libs\LibreHardwareMonitorLib.dll" /reference:"libs\HidSharp.dll" src\Core\*.cs src\Models\*.cs src\Services\*.cs src\Views\*.cs
@@ -11,7 +11,7 @@ echo [WattMonitor] Compiling WPF Native Modern with SettingsWindow...
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ============================================================
-    echo [WattMonitor] Build BERHASIL! (WattMonitor.exe terupdate)
+    echo [WattMonitor] Build BERHASIL! [WattMonitor.exe terupdate]
     echo ============================================================
 ) else (
     echo.
