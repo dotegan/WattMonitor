@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -80,10 +79,10 @@ namespace WattMonitor
             this.WindowStyle = WindowStyle.None;
             this.AllowsTransparency = true;
             this.Background = Brushes.Transparent;
-            this.Width = 410;
-            this.Height = 560;
-            this.MinWidth = 360;
-            this.MinHeight = 460;
+            this.Width = 460;
+            this.Height = 580;
+            this.MinWidth = 420;
+            this.MinHeight = 480;
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.ResizeMode = ResizeMode.CanResizeWithGrip;
 
@@ -164,18 +163,18 @@ namespace WattMonitor
             };
 
             Grid mainGrid = new Grid();
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Tab Bar
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Content
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Footer
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 0: Header
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 1: Tab Bar
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // 2: Content
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 3: Footer
 
             // ================= 1. HEADER =================
             Border headerBorder = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(200, 15, 23, 42)),
+                Background = new SolidColorBrush(Color.FromArgb(220, 15, 23, 42)),
                 BorderBrush = new SolidColorBrush(Color.FromArgb(80, 51, 65, 85)),
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(16, 10, 16, 10),
+                Padding = new Thickness(18, 12, 14, 12),
                 CornerRadius = new CornerRadius(10, 10, 0, 0)
             };
 
@@ -189,14 +188,14 @@ namespace WattMonitor
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             StackPanel titleSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            titleSp.Children.Add(LucideIcon.Create(LucideIcon.Settings, 18, new SolidColorBrush(Color.FromRgb(168, 85, 247)), false));
+            titleSp.Children.Add(LucideIcon.Create(LucideIcon.Settings, 16, new SolidColorBrush(Color.FromRgb(56, 189, 248)), false, 2.0));
 
             TextBlock titleTxt = new TextBlock
             {
-                Text = " Pengaturan & Konfigurasi",
+                Text = " Pengaturan",
                 FontFamily = new FontFamily("Segoe UI, Inter"),
                 FontWeight = FontWeights.Bold,
-                FontSize = 14,
+                FontSize = 13.5,
                 Foreground = Brushes.White,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -214,32 +213,50 @@ namespace WattMonitor
             Grid.SetRow(headerBorder, 0);
             mainGrid.Children.Add(headerBorder);
 
-            // ================= 2. TAB BAR =================
+            // ================= 2. TAB BAR (Pill Container) =================
             Border tabBar = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(140, 15, 23, 42)),
+                Background = new SolidColorBrush(Color.FromArgb(160, 15, 23, 42)),
                 BorderBrush = new SolidColorBrush(Color.FromArgb(60, 51, 65, 85)),
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(16, 6, 16, 6)
+                Padding = new Thickness(16, 8, 16, 8)
             };
 
-            StackPanel tabSp = new StackPanel { Orientation = Orientation.Horizontal };
-            tabBtnGeneral = CreateTabButton("Tarif", LucideIcon.Zap, 0, out tabTxtGeneral);
-            tabSp.Children.Add(tabBtnGeneral);
+            Border tabPillContainer = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(120, 2, 6, 23)), // Slate 950
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(3)
+            };
 
-            tabBtnDisplay = CreateTabButton("Layar", LucideIcon.Monitor, 1, out tabTxtDisplay);
-            tabSp.Children.Add(tabBtnDisplay);
+            Grid tabGrid = new Grid();
+            for (int i = 0; i < 5; i++)
+            {
+                tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            }
 
-            tabBtnThreshold = CreateTabButton("Batas", LucideIcon.Thermometer, 2, out tabTxtThreshold);
-            tabSp.Children.Add(tabBtnThreshold);
+            tabBtnGeneral = CreateTabPillButton("Tarif", LucideIcon.Zap, 0, out tabTxtGeneral);
+            Grid.SetColumn(tabBtnGeneral, 0);
+            tabGrid.Children.Add(tabBtnGeneral);
 
-            tabBtnPeripheral = CreateTabButton("Device", LucideIcon.HardDrive, 3, out tabTxtPeripheral);
-            tabSp.Children.Add(tabBtnPeripheral);
+            tabBtnDisplay = CreateTabPillButton("Layar", LucideIcon.Monitor, 1, out tabTxtDisplay);
+            Grid.SetColumn(tabBtnDisplay, 1);
+            tabGrid.Children.Add(tabBtnDisplay);
 
-            tabBtnFilter = CreateTabButton("Filter", LucideIcon.Activity, 4, out tabTxtFilter);
-            tabSp.Children.Add(tabBtnFilter);
+            tabBtnThreshold = CreateTabPillButton("Batas", LucideIcon.Thermometer, 2, out tabTxtThreshold);
+            Grid.SetColumn(tabBtnThreshold, 2);
+            tabGrid.Children.Add(tabBtnThreshold);
 
-            tabBar.Child = tabSp;
+            tabBtnPeripheral = CreateTabPillButton("Device", LucideIcon.HardDrive, 3, out tabTxtPeripheral);
+            Grid.SetColumn(tabBtnPeripheral, 3);
+            tabGrid.Children.Add(tabBtnPeripheral);
+
+            tabBtnFilter = CreateTabPillButton("Filter", LucideIcon.Activity, 4, out tabTxtFilter);
+            Grid.SetColumn(tabBtnFilter, 4);
+            tabGrid.Children.Add(tabBtnFilter);
+
+            tabPillContainer.Child = tabGrid;
+            tabBar.Child = tabPillContainer;
             Grid.SetRow(tabBar, 1);
             mainGrid.Children.Add(tabBar);
 
@@ -267,10 +284,10 @@ namespace WattMonitor
             // ================= 4. FOOTER =================
             Border footerBorder = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(120, 15, 23, 42)),
+                Background = new SolidColorBrush(Color.FromArgb(160, 15, 23, 42)),
                 BorderBrush = new SolidColorBrush(Color.FromArgb(60, 51, 65, 85)),
                 BorderThickness = new Thickness(0, 1, 0, 0),
-                Padding = new Thickness(16, 8, 16, 8),
+                Padding = new Thickness(16, 10, 16, 10),
                 CornerRadius = new CornerRadius(0, 0, 10, 10)
             };
 
@@ -284,22 +301,24 @@ namespace WattMonitor
                 Text = "",
                 FontSize = 11,
                 FontFamily = new FontFamily("Segoe UI, Inter"),
-                Foreground = new SolidColorBrush(Color.FromRgb(52, 211, 153)), // Emerald
-                VerticalAlignment = VerticalAlignment.Center
+                Foreground = new SolidColorBrush(Color.FromRgb(52, 211, 153)), // Emerald 400
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Margin = new Thickness(0, 0, 10, 0)
             };
             Grid.SetColumn(txtStatusMsg, 0);
             footerGrid.Children.Add(txtStatusMsg);
 
-            // Action Buttons (Pure Icon Buttons with Tooltips)
+            // Action Buttons (Clear Labels + Icons)
             StackPanel btnSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
 
-            Button btnReset = CreateIconActionButton(LucideIcon.RotateCcw, "Reset ke Pengaturan Default", ResetToDefaults, false);
+            Button btnReset = CreateFooterButton("Reset", LucideIcon.RotateCcw, "Reset semua ke konfigurasi default", ResetToDefaults, false, false);
             btnSp.Children.Add(btnReset);
 
-            Button btnCancel = CreateIconActionButton(LucideIcon.X, "Batal / Tutup", () => this.Close(), false);
+            Button btnCancel = CreateFooterButton("Batal", LucideIcon.X, "Tutup tanpa menyimpan", () => this.Close(), false, false);
             btnSp.Children.Add(btnCancel);
 
-            Button btnSave = CreateIconActionButton(LucideIcon.Save, "Simpan Pengaturan & Terapkan", SaveAndApplySettings, true);
+            Button btnSave = CreateFooterButton("Simpan", LucideIcon.Save, "Simpan perubahan dan terapkan ke aplikasi", SaveAndApplySettings, true, false);
             btnSp.Children.Add(btnSave);
 
             Grid.SetColumn(btnSp, 1);
@@ -318,13 +337,13 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardTariff = CreateSectionCard("Kalkulasi Tarif & Biaya Listrik", "Pengaturan tarif listrik PLN untuk kalkulasi estimasi pengeluaran.");
+            Border cardTariff = CreateSectionCard("Kalkulasi Tarif & Listrik", "Formula kalkulasi estimasi pengeluaran biaya listrik.");
             StackPanel cardSp = new StackPanel();
 
-            tbTariff = CreateInputField("Tarif Listrik (Rp / kWh):", "Contoh: 1444.70 untuk R-1/TR daya 900-1300 VA.", cardSp);
-            tbHoursPerDay = CreateInputField("Estimasi Jam Aktif per Hari (Jam):", "Digunakan untuk perkiraan tagihan bulanan (default: 12 jam).", cardSp);
-            tbAutosaveMinutes = CreateInputField("Interval Simpan Data Otomatis (Menit):", "Contoh: 0.08 (~5 detik) untuk keamanan proteksi mati lampu.", cardSp);
-            tbWattOffset = CreateInputField("Tambahan Daya Tetap (Watt Offset):", "Kompensasi daya standby yang tidak terdeteksi sensor (default: 5).", cardSp);
+            tbTariff = CreateInputFieldWithSuffix("Tarif Dasar Listrik", "Rp/kWh", "Contoh: 1444.70", cardSp);
+            tbHoursPerDay = CreateInputFieldWithSuffix("Estimasi Jam Aktif", "Jam/hari", "Digunakan untuk estimasi bulanan (cth: 12)", cardSp);
+            tbAutosaveMinutes = CreateInputFieldWithSuffix("Interval Simpan Data", "Menit", "0.08 = ~5 detik proteksi mati lampu", cardSp);
+            tbWattOffset = CreateInputFieldWithSuffix("Kompensasi Standby", "Watt", "Tambahan daya tetap di luar sensor hardware", cardSp);
 
             cardTariff.Child = cardSp;
             sp.Children.Add(cardTariff);
@@ -337,40 +356,14 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardDisplay = CreateSectionCard("Window & Mode Minimalis", "Sesuaikan tingkat transparansi dan ukuran teks widget di layar.");
+            Border cardDisplay = CreateSectionCard("Tampilan & Overlay", "Frekuensi pembaruan sensor, tingkat transparansi, dan font HUD.");
             StackPanel cardSp = new StackPanel();
 
             // Refresh rate slider
-            cardSp.Children.Add(CreateLabel("Refresh Rate Sensor (Kecepatan Update):"));
-            sliderRefreshRate = new Slider { Minimum = 100, Maximum = 2000, SmallChange = 50, LargeChange = 100, TickFrequency = 100, IsSnapToTickEnabled = true, Margin = new Thickness(0, 4, 0, 2) };
-            txtRefreshRateVal = new TextBlock { FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 12) };
-            sliderRefreshRate.ValueChanged += (s, e) => txtRefreshRateVal.Text = string.Format("{0} ms ({1:0.1} detik)", (int)sliderRefreshRate.Value, sliderRefreshRate.Value / 1000.0);
-            cardSp.Children.Add(sliderRefreshRate);
-            cardSp.Children.Add(txtRefreshRateVal);
-
-            // Full Opacity
-            cardSp.Children.Add(CreateLabel("Transparansi Window Utama:"));
-            sliderOpacity = new Slider { Minimum = 0.2, Maximum = 1.0, SmallChange = 0.05, LargeChange = 0.1, Margin = new Thickness(0, 4, 0, 2) };
-            txtOpacityVal = new TextBlock { FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 12) };
-            sliderOpacity.ValueChanged += (s, e) => txtOpacityVal.Text = string.Format("{0}%", (int)(sliderOpacity.Value * 100));
-            cardSp.Children.Add(sliderOpacity);
-            cardSp.Children.Add(txtOpacityVal);
-
-            // Minimalist Font Size
-            cardSp.Children.Add(CreateLabel("Ukuran Font Mode Minimalis (pt):"));
-            sliderFontSize = new Slider { Minimum = 8, Maximum = 18, SmallChange = 1, LargeChange = 2, TickFrequency = 1, IsSnapToTickEnabled = true, Margin = new Thickness(0, 4, 0, 2) };
-            txtFontSizeVal = new TextBlock { FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 12) };
-            sliderFontSize.ValueChanged += (s, e) => txtFontSizeVal.Text = string.Format("{0} pt", (int)sliderFontSize.Value);
-            cardSp.Children.Add(sliderFontSize);
-            cardSp.Children.Add(txtFontSizeVal);
-
-            // Minimalist Opacity
-            cardSp.Children.Add(CreateLabel("Transparansi Mode Minimalis:"));
-            sliderMinOpacity = new Slider { Minimum = 0.2, Maximum = 1.0, SmallChange = 0.05, LargeChange = 0.1, Margin = new Thickness(0, 4, 0, 2) };
-            txtMinOpacityVal = new TextBlock { FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), Margin = new Thickness(0, 0, 0, 6) };
-            sliderMinOpacity.ValueChanged += (s, e) => txtMinOpacityVal.Text = string.Format("{0}%", (int)(sliderMinOpacity.Value * 100));
-            cardSp.Children.Add(sliderMinOpacity);
-            cardSp.Children.Add(txtMinOpacityVal);
+            cardSp.Children.Add(CreateSliderRow("Refresh Rate Sensor", out sliderRefreshRate, out txtRefreshRateVal, 100, 2000, 100, (v) => string.Format("{0} ms", (int)v)));
+            cardSp.Children.Add(CreateSliderRow("Transparansi Window Utama", out sliderOpacity, out txtOpacityVal, 0.2, 1.0, 0.05, (v) => string.Format("{0}%", (int)(v * 100))));
+            cardSp.Children.Add(CreateSliderRow("Ukuran Font Minimalis", out sliderFontSize, out txtFontSizeVal, 8, 18, 1, (v) => string.Format("{0} pt", (int)v)));
+            cardSp.Children.Add(CreateSliderRow("Transparansi Minimalis", out sliderMinOpacity, out txtMinOpacityVal, 0.2, 1.0, 0.05, (v) => string.Format("{0}%", (int)(v * 100))));
 
             cardDisplay.Child = cardSp;
             sp.Children.Add(cardDisplay);
@@ -378,26 +371,106 @@ namespace WattMonitor
             return sp;
         }
 
+        private UIElement CreateSliderRow(string label, out Slider slider, out TextBlock txtVal, double min, double max, double tick, Func<double, string> formatVal)
+        {
+            StackPanel rowSp = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
+
+            Grid headG = new Grid();
+            headG.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headG.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            TextBlock lbl = new TextBlock
+            {
+                Text = label,
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Color.FromRgb(226, 232, 240)), // Slate 200
+                FontFamily = new FontFamily("Segoe UI, Inter")
+            };
+            Grid.SetColumn(lbl, 0);
+            headG.Children.Add(lbl);
+
+            txtVal = new TextBlock
+            {
+                FontSize = 11.5,
+                FontFamily = new FontFamily("Consolas, Segoe UI"),
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)) // Sky 400
+            };
+            Grid.SetColumn(txtVal, 1);
+            headG.Children.Add(txtVal);
+
+            rowSp.Children.Add(headG);
+
+            slider = new Slider
+            {
+                Minimum = min,
+                Maximum = max,
+                SmallChange = tick,
+                LargeChange = tick * 2,
+                TickFrequency = tick,
+                IsSnapToTickEnabled = true,
+                Margin = new Thickness(0, 6, 0, 2),
+                Height = 22
+            };
+
+            TextBlock capturedTxt = txtVal;
+            slider.ValueChanged += (s, e) => capturedTxt.Text = formatVal(e.NewValue);
+
+            rowSp.Children.Add(slider);
+            return rowSp;
+        }
+
         // ================= TAB 3: THRESHOLD SENSOR =================
         private UIElement BuildThresholdTab()
         {
             StackPanel sp = new StackPanel();
 
-            Border cardCpu = CreateSectionCard("Batas Suhu & Daya CPU", "Teks warna indikator akan berubah dari Normal ke Oranye, lalu ke Merah.");
+            Border cardCpu = CreateSectionCard("Batas Indikator CPU", "Nilai batas peralihan warna teks status CPU (Normal -> Oranye -> Merah).");
             StackPanel spCpu = new StackPanel();
-            tbCpuTempOrange = CreateInputField("Batas Suhu CPU Oranye (°C):", "Default: 55 °C", spCpu);
-            tbCpuTempRed = CreateInputField("Batas Suhu CPU Merah (°C):", "Default: 68 °C", spCpu);
-            tbCpuWattOrange = CreateInputField("Batas Daya CPU Oranye (Watt):", "Default: 45 W", spCpu);
-            tbCpuWattRed = CreateInputField("Batas Daya CPU Merah (Watt):", "Default: 60 W", spCpu);
+
+            Grid gCpu = new Grid { Margin = new Thickness(0, 2, 0, 0) };
+            gCpu.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            gCpu.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12, GridUnitType.Pixel) });
+            gCpu.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            StackPanel spCpuLeft = new StackPanel();
+            tbCpuTempOrange = CreateInputFieldWithSuffix("Suhu Oranye", "°C", "55", spCpuLeft);
+            tbCpuWattOrange = CreateInputFieldWithSuffix("Daya Oranye", "W", "45", spCpuLeft);
+            Grid.SetColumn(spCpuLeft, 0);
+            gCpu.Children.Add(spCpuLeft);
+
+            StackPanel spCpuRight = new StackPanel();
+            tbCpuTempRed = CreateInputFieldWithSuffix("Suhu Merah", "°C", "68", spCpuRight);
+            tbCpuWattRed = CreateInputFieldWithSuffix("Daya Merah", "W", "60", spCpuRight);
+            Grid.SetColumn(spCpuRight, 2);
+            gCpu.Children.Add(spCpuRight);
+
+            spCpu.Children.Add(gCpu);
             cardCpu.Child = spCpu;
             sp.Children.Add(cardCpu);
 
-            Border cardGpu = CreateSectionCard("Batas Suhu & Daya GPU", "Ambang batas peringatan temperatur dan watt kartu grafis.");
+            Border cardGpu = CreateSectionCard("Batas Indikator GPU", "Nilai batas ambang peringatan suhu dan daya kartu grafis.");
             StackPanel spGpu = new StackPanel();
-            tbGpuTempOrange = CreateInputField("Batas Suhu GPU Oranye (°C):", "Default: 60 °C", spGpu);
-            tbGpuTempRed = CreateInputField("Batas Suhu GPU Merah (°C):", "Default: 72 °C", spGpu);
-            tbGpuWattOrange = CreateInputField("Batas Daya GPU Oranye (Watt):", "Default: 95 W", spGpu);
-            tbGpuWattRed = CreateInputField("Batas Daya GPU Merah (Watt):", "Default: 130 W", spGpu);
+
+            Grid gGpu = new Grid { Margin = new Thickness(0, 2, 0, 0) };
+            gGpu.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            gGpu.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12, GridUnitType.Pixel) });
+            gGpu.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            StackPanel spGpuLeft = new StackPanel();
+            tbGpuTempOrange = CreateInputFieldWithSuffix("Suhu Oranye", "°C", "60", spGpuLeft);
+            tbGpuWattOrange = CreateInputFieldWithSuffix("Daya Oranye", "W", "95", spGpuLeft);
+            Grid.SetColumn(spGpuLeft, 0);
+            gGpu.Children.Add(spGpuLeft);
+
+            StackPanel spGpuRight = new StackPanel();
+            tbGpuTempRed = CreateInputFieldWithSuffix("Suhu Merah", "°C", "72", spGpuRight);
+            tbGpuWattRed = CreateInputFieldWithSuffix("Daya Merah", "W", "130", spGpuRight);
+            Grid.SetColumn(spGpuRight, 2);
+            gGpu.Children.Add(spGpuRight);
+
+            spGpu.Children.Add(gGpu);
             cardGpu.Child = spGpu;
             sp.Children.Add(cardGpu);
 
@@ -409,11 +482,11 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardList = CreateSectionCard("Perangkat Tambahan (Peripheral)", "Tambahkan konsumsi daya estimasi perangkat yang tidak memiliki sensor built-in (monitor, fan, RAM, motherboard).");
+            Border cardList = CreateSectionCard("Perangkat Tambahan", "Konsumsi daya estimasi peripheral (monitor, fan, RAM, motherboard).");
             StackPanel cardSp = new StackPanel();
 
             // List container
-            spPeripheralList = new StackPanel { Margin = new Thickness(0, 0, 0, 14) };
+            spPeripheralList = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
             cardSp.Children.Add(spPeripheralList);
 
             // Add new form
@@ -422,23 +495,23 @@ namespace WattMonitor
                 Background = new SolidColorBrush(Color.FromRgb(15, 23, 42)),
                 BorderBrush = new SolidColorBrush(Color.FromRgb(51, 65, 85)),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(12, 10, 12, 10),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(10, 8, 10, 8),
                 Margin = new Thickness(0, 4, 0, 0)
             };
 
             Grid addGrid = new Grid();
-            addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
-            addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
             addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
+            addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8, GridUnitType.Pixel) });
+            addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90, GridUnitType.Pixel) });
+            addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8, GridUnitType.Pixel) });
             addGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            tbNewPeriName = CreateDarkTextBox("Nama Perangkat (cth: Monitor LG 27\")");
+            tbNewPeriName = CreateDarkTextBox("Nama device (cth: Monitor)");
             Grid.SetColumn(tbNewPeriName, 0);
             addGrid.Children.Add(tbNewPeriName);
 
-            tbNewPeriWatt = CreateDarkTextBox("Daya (Watt)");
+            tbNewPeriWatt = CreateDarkTextBox("Watt");
             Grid.SetColumn(tbNewPeriWatt, 2);
             addGrid.Children.Add(tbNewPeriWatt);
 
@@ -476,14 +549,23 @@ namespace WattMonitor
             spPeripheralList.Children.Clear();
             if (workingPeripherals.Count == 0)
             {
-                TextBlock emptyTxt = new TextBlock
+                Border emptyBox = new Border
                 {
-                    Text = "Belum ada peripheral yang didaftarkan.",
+                    Background = new SolidColorBrush(Color.FromArgb(80, 15, 23, 42)),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(60, 51, 65, 85)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(12, 10, 12, 10),
+                    Margin = new Thickness(0, 0, 0, 6)
+                };
+                emptyBox.Child = new TextBlock
+                {
+                    Text = "Belum ada peripheral terdaftar.",
                     Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
                     FontSize = 11,
-                    Margin = new Thickness(0, 4, 0, 8)
+                    HorizontalAlignment = HorizontalAlignment.Center
                 };
-                spPeripheralList.Children.Add(emptyTxt);
+                spPeripheralList.Children.Add(emptyBox);
                 return;
             }
 
@@ -491,27 +573,28 @@ namespace WattMonitor
             {
                 Border row = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(20, 27, 45)),
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(30, 41, 59)),
+                    Background = new SolidColorBrush(Color.FromArgb(180, 15, 23, 42)),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(80, 51, 65, 85)),
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(6),
-                    Padding = new Thickness(12, 8, 12, 8),
-                    Margin = new Thickness(0, 0, 0, 6)
+                    Padding = new Thickness(12, 7, 10, 7),
+                    Margin = new Thickness(0, 0, 0, 5)
                 };
 
                 Grid g = new Grid();
                 g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12, GridUnitType.Pixel) });
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10, GridUnitType.Pixel) });
                 g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
                 TextBlock txtName = new TextBlock
                 {
                     Text = kvp.Key,
-                    FontSize = 12,
+                    FontSize = 11.5,
                     Foreground = Brushes.White,
                     FontWeight = FontWeights.SemiBold,
-                    VerticalAlignment = VerticalAlignment.Center
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextTrimming = TextTrimming.CharacterEllipsis
                 };
                 Grid.SetColumn(txtName, 0);
                 g.Children.Add(txtName);
@@ -519,7 +602,8 @@ namespace WattMonitor
                 TextBlock txtWatt = new TextBlock
                 {
                     Text = string.Format(CultureInfo.InvariantCulture, "{0:0.##} W", kvp.Value),
-                    FontSize = 12,
+                    FontSize = 11.5,
+                    FontFamily = new FontFamily("Consolas, Segoe UI"),
                     Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)),
                     FontWeight = FontWeights.Bold,
                     VerticalAlignment = VerticalAlignment.Center
@@ -528,7 +612,7 @@ namespace WattMonitor
                 g.Children.Add(txtWatt);
 
                 string keyCaptured = kvp.Key;
-                Button btnDel = CreateHeaderButton(LucideIcon.Trash, "Hapus Peripheral", () =>
+                Button btnDel = CreateHeaderButton(LucideIcon.Trash, "Hapus", () =>
                 {
                     workingPeripherals.Remove(keyCaptured);
                     RenderPeripheralList();
@@ -548,10 +632,16 @@ namespace WattMonitor
         {
             StackPanel sp = new StackPanel();
 
-            Border cardFilter = CreateSectionCard("Filter Teks Sensor", "Kata-kata berikut akan otomatis dipotong dari nama perangkat agar ringkas di HUD.");
+            Border cardFilter = CreateSectionCard("Filter Teks Sensor", "Kata-kata berikut akan otomatis dipangkas dari nama hardware agar teks HUD ringkas.");
             StackPanel cardSp = new StackPanel();
 
-            tbExcludeTexts = CreateInputField("Daftar Teks yang Dihapus (Pisahkan dengan koma):", "Contoh: NVIDIA GeForce, Intel Core, (TM), Processor, 8-Core", cardSp);
+            cardSp.Children.Add(CreateLabel("Daftar Teks yang Dipangkas (Pisahkan koma):"));
+            tbExcludeTexts = CreateDarkTextBox("NVIDIA GeForce, Intel Core, (TM), ...");
+            tbExcludeTexts.TextWrapping = TextWrapping.Wrap;
+            tbExcludeTexts.AcceptsReturn = false;
+            tbExcludeTexts.Height = 70;
+            tbExcludeTexts.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            cardSp.Children.Add(tbExcludeTexts);
 
             cardFilter.Child = cardSp;
             sp.Children.Add(cardFilter);
@@ -590,7 +680,7 @@ namespace WattMonitor
 
         private void ResetToDefaults()
         {
-            if (MessageBox.Show("Kembalikan semua nilai ke pengaturan standar (default)?", "Konfirmasi Reset", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            if (MessageBox.Show("Kembalikan semua nilai ke konfigurasi standar default?", "Konfirmasi Reset", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
             tbTariff.Text = "1444.70";
@@ -660,7 +750,7 @@ namespace WattMonitor
                 // Simpan ke config.json
                 Config.Save();
 
-                txtStatusMsg.Text = "Pengaturan berhasil disimpan dan diterapkan.";
+                txtStatusMsg.Text = "Pengaturan berhasil disimpan.";
 
                 // Trigger reload pada window utama
                 if (onSettingsApplied != null) onSettingsApplied();
@@ -676,19 +766,19 @@ namespace WattMonitor
         {
             Border b = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(15, 23, 42)), // #0F172A
-                BorderBrush = new SolidColorBrush(Color.FromRgb(30, 41, 59)), // #1E293B
+                Background = new SolidColorBrush(Color.FromRgb(15, 23, 42)), // Slate 900
+                BorderBrush = new SolidColorBrush(Color.FromRgb(30, 41, 59)), // Slate 800
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(16),
-                Margin = new Thickness(0, 0, 0, 12)
+                Padding = new Thickness(16, 14, 16, 14),
+                Margin = new Thickness(0, 0, 0, 10)
             };
 
             StackPanel sp = new StackPanel();
             TextBlock tTxt = new TextBlock
             {
                 Text = title,
-                FontSize = 13,
+                FontSize = 12.5,
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 FontFamily = new FontFamily("Segoe UI, Inter")
@@ -700,10 +790,11 @@ namespace WattMonitor
                 TextBlock sTxt = new TextBlock
                 {
                     Text = subtitle,
-                    FontSize = 11,
-                    Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)),
+                    FontSize = 10.5,
+                    Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), // Slate 400
                     FontFamily = new FontFamily("Segoe UI, Inter"),
-                    Margin = new Thickness(0, 2, 0, 12)
+                    Margin = new Thickness(0, 2, 0, 12),
+                    TextWrapping = TextWrapping.Wrap
                 };
                 sp.Children.Add(sTxt);
             }
@@ -712,11 +803,64 @@ namespace WattMonitor
             return b;
         }
 
-        private TextBox CreateInputField(string labelText, string hintText, StackPanel parent)
+        private TextBox CreateInputFieldWithSuffix(string labelText, string suffix, string hintText, StackPanel parent)
         {
             parent.Children.Add(CreateLabel(labelText));
-            TextBox tb = CreateDarkTextBox(hintText);
-            parent.Children.Add(tb);
+
+            Border box = new Border
+            {
+                Height = 32,
+                Background = new SolidColorBrush(Color.FromRgb(30, 41, 59)), // Slate 800
+                BorderBrush = new SolidColorBrush(Color.FromRgb(51, 65, 85)), // Slate 700
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(6),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            Grid g = new Grid();
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            TextBox tb = new TextBox
+            {
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = Brushes.White,
+                FontSize = 12,
+                FontFamily = new FontFamily("Consolas, Segoe UI"),
+                Padding = new Thickness(10, 6, 6, 6),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                ToolTip = hintText
+            };
+            Grid.SetColumn(tb, 0);
+            g.Children.Add(tb);
+
+            if (!string.IsNullOrEmpty(suffix))
+            {
+                Border sfxBorder = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(80, 15, 23, 42)),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(60, 51, 65, 85)),
+                    BorderThickness = new Thickness(1, 0, 0, 0),
+                    Padding = new Thickness(8, 0, 10, 0),
+                    CornerRadius = new CornerRadius(0, 5, 5, 0)
+                };
+                TextBlock sfxTxt = new TextBlock
+                {
+                    Text = suffix,
+                    FontSize = 10.5,
+                    FontFamily = new FontFamily("Segoe UI, Inter"),
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), // Slate 400
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                sfxBorder.Child = sfxTxt;
+                Grid.SetColumn(sfxBorder, 1);
+                g.Children.Add(sfxBorder);
+            }
+
+            box.Child = g;
+            parent.Children.Add(box);
             return tb;
         }
 
@@ -725,11 +869,11 @@ namespace WattMonitor
             return new TextBlock
             {
                 Text = text,
-                FontSize = 11.5,
+                FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
                 Foreground = new SolidColorBrush(Color.FromRgb(203, 213, 225)), // Slate 300
                 FontFamily = new FontFamily("Segoe UI, Inter"),
-                Margin = new Thickness(0, 4, 0, 4)
+                Margin = new Thickness(0, 2, 0, 4)
             };
         }
 
@@ -745,25 +889,24 @@ namespace WattMonitor
                 FontSize = 12,
                 FontFamily = new FontFamily("Segoe UI, Inter"),
                 Padding = new Thickness(8, 6, 8, 6),
-                Margin = new Thickness(0, 0, 0, 10),
                 ToolTip = tooltip
             };
             return tb;
         }
 
-        private Border CreateTabButton(string title, string iconPath, int tabIndex, out TextBlock txt)
+        private Border CreateTabPillButton(string title, string iconPath, int tabIndex, out TextBlock txt)
         {
             Border b = new Border
             {
                 Background = Brushes.Transparent,
                 CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(7, 4, 7, 4),
-                Margin = new Thickness(0, 0, 3, 0),
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(2, 0, 2, 0),
                 Cursor = Cursors.Hand
             };
 
-            StackPanel sp = new StackPanel { Orientation = Orientation.Horizontal };
-            sp.Children.Add(LucideIcon.Create(iconPath, 13, new SolidColorBrush(Color.FromRgb(148, 163, 184)), false));
+            StackPanel sp = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+            sp.Children.Add(LucideIcon.Create(iconPath, 13, new SolidColorBrush(Color.FromRgb(148, 163, 184)), false, 1.8));
 
             txt = new TextBlock
             {
@@ -802,46 +945,34 @@ namespace WattMonitor
             scrollPeripheral.Visibility = Visibility.Collapsed;
             scrollFilter.Visibility = Visibility.Collapsed;
 
-            if (tabIndex == 0)
+            Border activeBtn = null;
+            TextBlock activeTxt = null;
+            ScrollViewer activeScroll = null;
+
+            switch (tabIndex)
             {
-                tabBtnGeneral.Background = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-                tabTxtGeneral.Foreground = Brushes.White;
-                scrollGeneral.Visibility = Visibility.Visible;
+                case 0: activeBtn = tabBtnGeneral; activeTxt = tabTxtGeneral; activeScroll = scrollGeneral; break;
+                case 1: activeBtn = tabBtnDisplay; activeTxt = tabTxtDisplay; activeScroll = scrollDisplay; break;
+                case 2: activeBtn = tabBtnThreshold; activeTxt = tabTxtThreshold; activeScroll = scrollThreshold; break;
+                case 3: activeBtn = tabBtnPeripheral; activeTxt = tabTxtPeripheral; activeScroll = scrollPeripheral; break;
+                case 4: activeBtn = tabBtnFilter; activeTxt = tabTxtFilter; activeScroll = scrollFilter; break;
             }
-            else if (tabIndex == 1)
+
+            if (activeBtn != null && activeTxt != null && activeScroll != null)
             {
-                tabBtnDisplay.Background = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-                tabTxtDisplay.Foreground = Brushes.White;
-                scrollDisplay.Visibility = Visibility.Visible;
-            }
-            else if (tabIndex == 2)
-            {
-                tabBtnThreshold.Background = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-                tabTxtThreshold.Foreground = Brushes.White;
-                scrollThreshold.Visibility = Visibility.Visible;
-            }
-            else if (tabIndex == 3)
-            {
-                tabBtnPeripheral.Background = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-                tabTxtPeripheral.Foreground = Brushes.White;
-                scrollPeripheral.Visibility = Visibility.Visible;
-            }
-            else if (tabIndex == 4)
-            {
-                tabBtnFilter.Background = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-                tabTxtFilter.Foreground = Brushes.White;
-                scrollFilter.Visibility = Visibility.Visible;
+                activeBtn.Background = new SolidColorBrush(Color.FromRgb(30, 41, 59)); // Slate 800
+                activeTxt.Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)); // Sky 400 active
+                activeScroll.Visibility = Visibility.Visible;
             }
         }
 
-        private Button CreateIconActionButton(string iconPath, string tooltip, Action onClick, bool isPrimary)
+        private Button CreateFooterButton(string text, string iconPath, string tooltip, Action onClick, bool isPrimary, bool isDanger)
         {
             Button btn = new Button
             {
-                Width = 34,
-                Height = 30,
+                Height = 32,
                 Cursor = Cursors.Hand,
-                Margin = new Thickness(4, 0, 0, 0),
+                Margin = new Thickness(6, 0, 0, 0),
                 ToolTip = tooltip,
                 Focusable = false
             };
@@ -862,24 +993,48 @@ namespace WattMonitor
                 border.SetValue(Border.BorderThicknessProperty, new Thickness(1));
             }
 
-            FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
-            cp.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-            cp.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
-            border.AppendChild(cp);
+            FrameworkElementFactory sp = new FrameworkElementFactory(typeof(StackPanel));
+            sp.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+            sp.SetValue(StackPanel.MarginProperty, new Thickness(12, 0, 12, 0));
+            sp.SetValue(StackPanel.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            sp.SetValue(StackPanel.VerticalAlignmentProperty, VerticalAlignment.Center);
+
+            // Icon
+            Brush iconBrush = isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+            var iconElem = LucideIcon.Create(iconPath, 13, iconBrush, false, 1.8);
+            sp.AppendChild(WrapElement(iconElem));
+
+            // Text
+            FrameworkElementFactory txt = new FrameworkElementFactory(typeof(TextBlock));
+            txt.SetValue(TextBlock.TextProperty, " " + text);
+            txt.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe UI, Inter"));
+            txt.SetValue(TextBlock.FontSizeProperty, 11.5);
+            txt.SetValue(TextBlock.FontWeightProperty, FontWeights.SemiBold);
+            txt.SetValue(TextBlock.ForegroundProperty, isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(226, 232, 240)));
+            txt.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+            sp.AppendChild(txt);
+
+            border.AppendChild(sp);
             template.VisualTree = border;
 
             Trigger hoverTrigger = new Trigger { Property = Button.IsMouseOverProperty, Value = true };
             if (isPrimary)
                 hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(3, 105, 161)), "bd")); // Sky 700
             else
-                hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(51, 65, 85)), "bd"));
+                hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(51, 65, 85)), "bd")); // Slate 700
             template.Triggers.Add(hoverTrigger);
 
             btn.Template = template;
-            Brush iconBrush = isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(203, 213, 225));
-            btn.Content = LucideIcon.Create(iconPath, 15, iconBrush, false, 1.8);
             btn.Click += (s, e) => onClick();
             return btn;
+        }
+
+        private static FrameworkElementFactory WrapElement(UIElement elem)
+        {
+            // Helper to place existing UIElement into FrameworkElementFactory via ContentPresenter
+            FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
+            cp.SetValue(ContentPresenter.ContentProperty, elem);
+            return cp;
         }
 
         private Button CreateHeaderButton(string iconPath, string tooltip, Action onClick)
@@ -895,8 +1050,7 @@ namespace WattMonitor
             };
 
             ControlTemplate template = new ControlTemplate(typeof(Button));
-            FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border));
-            border.Name = "bd";
+            FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border), "bd");
             border.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
             border.SetValue(Border.BackgroundProperty, Brushes.Transparent);
 
@@ -921,10 +1075,10 @@ namespace WattMonitor
             Button btn = new Button
             {
                 Content = text,
-                Height = 30,
+                Height = 32,
                 Padding = new Thickness(14, 0, 14, 0),
                 Cursor = Cursors.Hand,
-                Margin = new Thickness(6, 0, 0, 0),
+                Margin = new Thickness(0),
                 FontFamily = new FontFamily("Segoe UI, Inter"),
                 FontSize = 11.5,
                 FontWeight = FontWeights.SemiBold,
@@ -932,10 +1086,9 @@ namespace WattMonitor
             };
 
             ControlTemplate template = new ControlTemplate(typeof(Button));
-            FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border));
-            border.Name = "bd";
+            FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border), "bd");
             border.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
-            border.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(2, 132, 199))); // #0284C7 Sky 600
+            border.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(2, 132, 199))); // Sky 600
 
             FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
             cp.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
@@ -945,43 +1098,6 @@ namespace WattMonitor
 
             Trigger hoverTrigger = new Trigger { Property = Button.IsMouseOverProperty, Value = true };
             hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(3, 105, 161)), "bd")); // Sky 700
-            template.Triggers.Add(hoverTrigger);
-
-            btn.Template = template;
-            btn.Click += (s, e) => onClick();
-            return btn;
-        }
-
-        private Button CreateOutlineButton(string text, Action onClick)
-        {
-            Button btn = new Button
-            {
-                Content = text,
-                Height = 30,
-                Padding = new Thickness(12, 0, 12, 0),
-                Cursor = Cursors.Hand,
-                Margin = new Thickness(6, 0, 0, 0),
-                FontFamily = new FontFamily("Segoe UI, Inter"),
-                FontSize = 11.5,
-                Foreground = new SolidColorBrush(Color.FromRgb(203, 213, 225))
-            };
-
-            ControlTemplate template = new ControlTemplate(typeof(Button));
-            FrameworkElementFactory border = new FrameworkElementFactory(typeof(Border));
-            border.Name = "bd";
-            border.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
-            border.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(30, 41, 59))); // Slate 800
-            border.SetValue(Border.BorderBrushProperty, new SolidColorBrush(Color.FromRgb(51, 65, 85)));
-            border.SetValue(Border.BorderThicknessProperty, new Thickness(1));
-
-            FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
-            cp.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-            cp.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
-            border.AppendChild(cp);
-            template.VisualTree = border;
-
-            Trigger hoverTrigger = new Trigger { Property = Button.IsMouseOverProperty, Value = true };
-            hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(51, 65, 85)), "bd"));
             template.Triggers.Add(hoverTrigger);
 
             btn.Template = template;
