@@ -17,6 +17,13 @@ system/laporan/*/
 *.suo
 *.pdb
 *.tmp
+*.TMP
+*~*
+
+# Backups & Local Residue
+*.bak
+_backups/
+*_backup*/
 
 # IDE & Editor Settings
 .vs/
