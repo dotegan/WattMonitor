@@ -993,28 +993,10 @@ namespace WattMonitor
                 border.SetValue(Border.BorderThicknessProperty, new Thickness(1));
             }
 
-            FrameworkElementFactory sp = new FrameworkElementFactory(typeof(StackPanel));
-            sp.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-            sp.SetValue(StackPanel.MarginProperty, new Thickness(12, 0, 12, 0));
-            sp.SetValue(StackPanel.HorizontalAlignmentProperty, HorizontalAlignment.Center);
-            sp.SetValue(StackPanel.VerticalAlignmentProperty, VerticalAlignment.Center);
-
-            // Icon
-            Brush iconBrush = isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(203, 213, 225));
-            var iconElem = LucideIcon.Create(iconPath, 13, iconBrush, false, 1.8);
-            sp.AppendChild(WrapElement(iconElem));
-
-            // Text
-            FrameworkElementFactory txt = new FrameworkElementFactory(typeof(TextBlock));
-            txt.SetValue(TextBlock.TextProperty, " " + text);
-            txt.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe UI, Inter"));
-            txt.SetValue(TextBlock.FontSizeProperty, 11.5);
-            txt.SetValue(TextBlock.FontWeightProperty, FontWeights.SemiBold);
-            txt.SetValue(TextBlock.ForegroundProperty, isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(226, 232, 240)));
-            txt.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
-            sp.AppendChild(txt);
-
-            border.AppendChild(sp);
+            FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
+            cp.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+            cp.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+            border.AppendChild(cp);
             template.VisualTree = border;
 
             Trigger hoverTrigger = new Trigger { Property = Button.IsMouseOverProperty, Value = true };
@@ -1025,16 +1007,33 @@ namespace WattMonitor
             template.Triggers.Add(hoverTrigger);
 
             btn.Template = template;
+
+            // Content StackPanel
+            StackPanel btnSp = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(12, 0, 12, 0),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            Brush iconBrush = isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(203, 213, 225));
+            btnSp.Children.Add(LucideIcon.Create(iconPath, 13, iconBrush, false, 1.8));
+
+            TextBlock txt = new TextBlock
+            {
+                Text = " " + text,
+                FontFamily = new FontFamily("Segoe UI, Inter"),
+                FontSize = 11.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = isPrimary ? Brushes.White : new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            btnSp.Children.Add(txt);
+
+            btn.Content = btnSp;
             btn.Click += (s, e) => onClick();
             return btn;
-        }
-
-        private static FrameworkElementFactory WrapElement(UIElement elem)
-        {
-            // Helper to place existing UIElement into FrameworkElementFactory via ContentPresenter
-            FrameworkElementFactory cp = new FrameworkElementFactory(typeof(ContentPresenter));
-            cp.SetValue(ContentPresenter.ContentProperty, elem);
-            return cp;
         }
 
         private Button CreateHeaderButton(string iconPath, string tooltip, Action onClick)
