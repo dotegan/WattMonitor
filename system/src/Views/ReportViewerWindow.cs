@@ -211,11 +211,8 @@ namespace WattMonitor
             Grid.SetColumn(titleSp, 0);
             headerGrid.Children.Add(titleSp);
 
-            // Header Action Buttons (Open MD, Minimize, Close)
+            // Header Action Buttons (Minimize, Close)
             StackPanel actSp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-
-            Button btnOpenMd = CreateHeaderButton(LucideIcon.FileText, "Buka Berkas .MD Asli", () => OpenCurrentMdFile());
-            actSp.Children.Add(btnOpenMd);
 
             Button btnMin = CreateHeaderButton(LucideIcon.Minimize, "Minimize", () => this.WindowState = WindowState.Minimized);
             actSp.Children.Add(btnMin);
@@ -1190,19 +1187,6 @@ namespace WattMonitor
                 }
             }
             return false;
-        }
-
-        private void OpenCurrentMdFile()
-        {
-            string path = currentTab == 0 ? ReportGenerator.GetReportPath(selectedMonth) : ReportGenerator.GetHardwareReportPath(selectedMonth);
-            if (File.Exists(path))
-            {
-                try { Process.Start(path); } catch { }
-            }
-            else
-            {
-                MessageBox.Show("Berkas laporan Markdown belum tersedia untuk bulan ini.", "WattMonitor", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
         }
     }
 }

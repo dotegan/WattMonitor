@@ -4,11 +4,8 @@
 
 # User Personal Data & Logs
 system/logs/
-system/laporan/*/
+system/laporan/
 *.log
-
-# Keep sample template report
-!system/contoh_laporan_perangkat.md
 
 # Build Outputs & Temp Files
 [Bb]in/

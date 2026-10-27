@@ -48,7 +48,6 @@
     <Compile Include="Models\SessionRecord.cs" />
     <Compile Include="Services\HardwareScanner.cs" />
     <Compile Include="Services\HistoryStore.cs" />
-    <Compile Include="Services\ReportGenerator.cs" />
     <Compile Include="Services\SessionManager.cs" />
     <Compile Include="Views\LucideIcon.cs" />
     <Compile Include="Views\WattMonitorWpfWindow.cs" />

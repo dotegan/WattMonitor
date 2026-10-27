@@ -71,8 +71,6 @@ namespace WattMonitor
             CommitCurrentSession(sessionStartTime, sessionMins, sessionKwh, sessionCost, hardwareKwh);
             HistoryStore.Save(HistoricalSessions, sessionStartTime);
             HistoryStore.SaveHardware(HistoricalHardware, sessionStartTime);
-            ReportGenerator.Render(HistoricalSessions, sessionStartTime);
-            ReportGenerator.RenderHardware(HistoricalHardware, HistoricalSessions, sessionStartTime);
         }
     }
 }
