@@ -103,7 +103,7 @@ namespace WattMonitor
         <Setter.Value>
             <ControlTemplate TargetType='{x:Type ScrollBar}'>
                 <Grid Background='Transparent' SnapsToDevicePixels='true'>
-                    <Track x:Name='PART_Track' IsDirectionReversed='true' EnableContextMenu='false'>
+                    <Track x:Name='PART_Track' IsDirectionReversed='true'>
                         <Track.DecreaseRepeatButton>
                             <RepeatButton Command='{x:Static ScrollBar.PageUpCommand}' Opacity='0' Focusable='false'/>
                         </Track.DecreaseRepeatButton>
