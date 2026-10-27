@@ -657,7 +657,7 @@ namespace WattMonitor
                     Config.StaticPeripherals[kvp.Key] = kvp.Value;
                 }
 
-                // Simpan ke config.txt
+                // Simpan ke config.json
                 Config.Save();
 
                 txtStatusMsg.Text = "Pengaturan berhasil disimpan dan diterapkan.";

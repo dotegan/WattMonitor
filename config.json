@@ -1,0 +1,47 @@
+{
+  "General": {
+    "Tariff": 1444.70,
+    "HoursPerDay": 12.0,
+    "AutosaveMinutes": 0.08,
+    "WattOffset": 5.0
+  },
+  "Display": {
+    "RefreshRateMs": 500,
+    "Opacity": 1.0,
+    "ConsoleWidth": 55
+  },
+  "MinimalistMode": {
+    "FontSize": 9.0,
+    "Opacity": 1.0,
+    "Width": -1,
+    "Height": -1,
+    "CpuTempOrange": 55.0,
+    "CpuTempRed": 68.0,
+    "GpuTempOrange": 60.0,
+    "GpuTempRed": 72.0,
+    "CpuWattOrange": 45.0,
+    "CpuWattRed": 60.0,
+    "GpuWattOrange": 95.0,
+    "GpuWattRed": 130.0
+  },
+  "Filter": {
+    "ExcludeTexts": [
+      "NVIDIA GeForce",
+      "(TM)",
+      "Processor",
+      "Intel Core",
+      "8-Core",
+      "16-Core",
+      "12-Core",
+      "6-Core",
+      "4-Core"
+    ]
+  },
+  "Peripheral": {
+    "LG 27GP850-B": 55.0,
+    "ADATA SX6000 Lite": 0.33,
+    "FAN NZXT 7x@3.84": 27.0,
+    "G.Skill Trident Z5": 5.0,
+    "ASRock B650 Pro RS": 20.0
+  }
+}

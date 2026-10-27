@@ -1007,10 +1007,10 @@ namespace WattMonitor
             liveCard.Child = liveSp;
             spInfoContent.Children.Add(liveCard);
 
-            // SECTION 2: PARAMETER KONFIGURASI (config.txt)
+            // SECTION 2: PARAMETER KONFIGURASI (config.json)
             TextBlock sec2Title = new TextBlock
             {
-                Text = "PARAMETER & PENGATURAN (CONFIG.TXT)",
+                Text = "PARAMETER & PENGATURAN (CONFIG.JSON)",
                 FontSize = 11,
                 FontFamily = new FontFamily("Segoe UI, Inter"),
                 FontWeight = FontWeights.Bold,
