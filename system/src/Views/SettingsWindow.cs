@@ -373,34 +373,22 @@ namespace WattMonitor
 
         private UIElement CreateSliderRow(string label, out Slider slider, out TextBlock txtVal, double min, double max, double tick, Func<double, string> formatVal)
         {
-            StackPanel rowSp = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
-
-            Grid headG = new Grid();
-            headG.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            headG.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            StackPanel rowSp = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
 
             TextBlock lbl = new TextBlock
             {
                 Text = label,
-                FontSize = 11.5,
+                FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Color.FromRgb(226, 232, 240)), // Slate 200
-                FontFamily = new FontFamily("Segoe UI, Inter")
+                Foreground = new SolidColorBrush(Color.FromRgb(203, 213, 225)), // Slate 300
+                FontFamily = new FontFamily("Segoe UI, Inter"),
+                Margin = new Thickness(0, 0, 0, 4)
             };
-            Grid.SetColumn(lbl, 0);
-            headG.Children.Add(lbl);
+            rowSp.Children.Add(lbl);
 
-            txtVal = new TextBlock
-            {
-                FontSize = 11.5,
-                FontFamily = new FontFamily("Consolas, Segoe UI"),
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)) // Sky 400
-            };
-            Grid.SetColumn(txtVal, 1);
-            headG.Children.Add(txtVal);
-
-            rowSp.Children.Add(headG);
+            Grid sliderGrid = new Grid();
+            sliderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            sliderGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(64, GridUnitType.Pixel) });
 
             slider = new Slider
             {
@@ -410,14 +398,40 @@ namespace WattMonitor
                 LargeChange = tick * 2,
                 TickFrequency = tick,
                 IsSnapToTickEnabled = true,
-                Margin = new Thickness(0, 6, 0, 2),
-                Height = 22
+                Margin = new Thickness(0, 0, 10, 0),
+                Height = 22,
+                VerticalAlignment = VerticalAlignment.Center
             };
+            Grid.SetColumn(slider, 0);
+            sliderGrid.Children.Add(slider);
+
+            Border valBadge = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(140, 15, 23, 42)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(80, 51, 65, 85)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Height = 26,
+                Padding = new Thickness(4, 0, 4, 0)
+            };
+
+            txtVal = new TextBlock
+            {
+                FontSize = 11,
+                FontFamily = new FontFamily("Consolas, Segoe UI"),
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Color.FromRgb(56, 189, 248)), // Sky 400
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            valBadge.Child = txtVal;
+            Grid.SetColumn(valBadge, 1);
+            sliderGrid.Children.Add(valBadge);
 
             TextBlock capturedTxt = txtVal;
             slider.ValueChanged += (s, e) => capturedTxt.Text = formatVal(e.NewValue);
 
-            rowSp.Children.Add(slider);
+            rowSp.Children.Add(sliderGrid);
             return rowSp;
         }
 
@@ -809,12 +823,12 @@ namespace WattMonitor
 
             Border box = new Border
             {
-                Height = 32,
+                Height = 28,
                 Background = new SolidColorBrush(Color.FromRgb(30, 41, 59)), // Slate 800
                 BorderBrush = new SolidColorBrush(Color.FromRgb(51, 65, 85)), // Slate 700
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(6),
-                Margin = new Thickness(0, 0, 0, 10)
+                CornerRadius = new CornerRadius(5),
+                Margin = new Thickness(0, 0, 0, 6)
             };
 
             Grid g = new Grid();
@@ -826,9 +840,9 @@ namespace WattMonitor
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Foreground = Brushes.White,
-                FontSize = 12,
+                FontSize = 11.5,
                 FontFamily = new FontFamily("Consolas, Segoe UI"),
-                Padding = new Thickness(10, 6, 6, 6),
+                Padding = new Thickness(8, 4, 6, 4),
                 VerticalContentAlignment = VerticalAlignment.Center,
                 ToolTip = hintText
             };
@@ -842,13 +856,13 @@ namespace WattMonitor
                     Background = new SolidColorBrush(Color.FromArgb(80, 15, 23, 42)),
                     BorderBrush = new SolidColorBrush(Color.FromArgb(60, 51, 65, 85)),
                     BorderThickness = new Thickness(1, 0, 0, 0),
-                    Padding = new Thickness(8, 0, 10, 0),
-                    CornerRadius = new CornerRadius(0, 5, 5, 0)
+                    Padding = new Thickness(7, 0, 8, 0),
+                    CornerRadius = new CornerRadius(0, 4, 4, 0)
                 };
                 TextBlock sfxTxt = new TextBlock
                 {
                     Text = suffix,
-                    FontSize = 10.5,
+                    FontSize = 10,
                     FontFamily = new FontFamily("Segoe UI, Inter"),
                     FontWeight = FontWeights.SemiBold,
                     Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)), // Slate 400

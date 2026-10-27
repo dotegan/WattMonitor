@@ -372,7 +372,7 @@ namespace WattMonitor
             minimalistPanel = new Border
             {
                 Background = Brushes.Transparent,
-                Padding = new Thickness(12, 6, 12, 6)
+                Padding = new Thickness(14, 7, 14, 7)
             };
 
             StackPanel sp = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };

@@ -662,7 +662,7 @@ namespace WattMonitor
             Border cardKwh = CreateStatCard("TOTAL ENERGI", string.Format(CultureInfo.InvariantCulture, "{0:F2} kWh", totalKwh), "Akumulasi pemakaian", Color.FromRgb(245, 158, 11));
             Grid.SetColumn(cardKwh, 2); sumGrid.Children.Add(cardKwh);
 
-            Border cardCost = CreateStatCard("TOTAL BIAYA", string.Format("Rp {0:N0}", totalCost), string.Format("Tarif Rp {0:N0}/kWh", Config.Tariff), Color.FromRgb(74, 222, 128));
+            Border cardCost = CreateStatCard("TOTAL BIAYA", string.Format("Rp {0:N0}", totalCost), string.Format("Tarif Rp {0:N0}/kWh", Config.Tariff), Color.FromRgb(74, 222, 128), true);
             Grid.SetColumn(cardCost, 4); sumGrid.Children.Add(cardCost);
 
             Border cardAvg = CreateStatCard("RATA-RATA HARIAN", string.Format("Rp {0:N0}", avgCost), string.Format("{0} hari tercatat", records.Count), Color.FromRgb(168, 85, 247));
@@ -936,7 +936,7 @@ namespace WattMonitor
                     Minimum = 0,
                     Maximum = 100,
                     Value = pct,
-                    Foreground = GetHwProgressBrush(i),
+                    Foreground = GetHwProgressBrush(pct),
                     Background = new SolidColorBrush(Color.FromArgb(80, 51, 65, 85)),
                     BorderThickness = new Thickness(0),
                     Margin = new Thickness(0, 6, 0, 2)
@@ -1102,15 +1102,15 @@ namespace WattMonitor
             return g;
         }
 
-        private Border CreateStatCard(string label, string value, string subtext, Color accent)
+        private Border CreateStatCard(string label, string value, string subtext, Color accent, bool isHero = false)
         {
             Border b = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(140, 15, 23, 42)),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(90, 30, 41, 59)),
-                BorderThickness = new Thickness(1),
+                Background = isHero ? new SolidColorBrush(Color.FromArgb(180, 15, 23, 42)) : new SolidColorBrush(Color.FromArgb(140, 15, 23, 42)),
+                BorderBrush = isHero ? new SolidColorBrush(Color.FromRgb(34, 197, 94)) : new SolidColorBrush(Color.FromArgb(90, 30, 41, 59)),
+                BorderThickness = new Thickness(isHero ? 1.5 : 1),
                 CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(10, 8, 10, 8)
+                Padding = new Thickness(10, isHero ? 10 : 8, 10, isHero ? 10 : 8)
             };
 
             StackPanel sp = new StackPanel();
@@ -1119,16 +1119,16 @@ namespace WattMonitor
                 Text = label,
                 FontSize = 9.5,
                 FontFamily = new FontFamily("Segoe UI, Inter"),
-                FontWeight = FontWeights.SemiBold,
+                FontWeight = FontWeights.Bold,
                 Foreground = new SolidColorBrush(accent)
             });
             sp.Children.Add(new TextBlock
             {
                 Text = value,
-                FontSize = 16,
-                FontFamily = new FontFamily("Segoe UI, Inter"),
+                FontSize = isHero ? 19 : 15.5,
+                FontFamily = new FontFamily("Segoe UI, Inter, Consolas"),
                 FontWeight = FontWeights.ExtraBold,
-                Foreground = Brushes.White,
+                Foreground = isHero ? new SolidColorBrush(Color.FromRgb(74, 222, 128)) : Brushes.White,
                 Margin = new Thickness(0, 3, 0, 2)
             });
             sp.Children.Add(new TextBlock
@@ -1158,16 +1158,13 @@ namespace WattMonitor
             return tb;
         }
 
-        private Brush GetHwProgressBrush(int index)
+        private Brush GetHwProgressBrush(double pct)
         {
-            switch (index % 5)
-            {
-                case 0: return new SolidColorBrush(Color.FromRgb(56, 189, 248)); // Sky
-                case 1: return new SolidColorBrush(Color.FromRgb(168, 85, 247)); // Purple
-                case 2: return new SolidColorBrush(Color.FromRgb(74, 222, 128)); // Emerald
-                case 3: return new SolidColorBrush(Color.FromRgb(245, 158, 11)); // Amber
-                default: return new SolidColorBrush(Color.FromRgb(239, 68, 68)); // Red
-            }
+            // Kaidah app-screens: warna berbobot untuk data dominan (>40% Sky Blue hero, >20% Indigo, periferal kecil Slate neutral)
+            if (pct >= 40.0) return new SolidColorBrush(Color.FromRgb(56, 189, 248)); // Sky 400 (Dominant Consumer)
+            if (pct >= 20.0) return new SolidColorBrush(Color.FromRgb(129, 140, 248)); // Indigo 400 (Medium Consumer)
+            if (pct >= 10.0) return new SolidColorBrush(Color.FromRgb(148, 163, 184)); // Slate 400 (Moderate)
+            return new SolidColorBrush(Color.FromRgb(100, 116, 139)); // Slate 500 (Minor / Peripheral)
         }
 
         private bool IsInsideElement(DependencyObject source, DependencyObject target)
