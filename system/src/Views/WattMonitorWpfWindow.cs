@@ -109,6 +109,7 @@ namespace WattMonitor
             }
             catch { }
 
+            ModernDialog.ApplyDarkToolTipStyle(this);
             BuildUI();
             InitTrayIcon();
             InitHardwareAndTimers();
@@ -258,10 +259,13 @@ namespace WattMonitor
 
             cm.Items.Add(CreateModernMenuSeparator());
 
-            // 5. Lihat Laporan
-            cm.Items.Add(CreateModernMenuItem("Lihat Laporan", LucideIcon.BarChart, () => OpenReportViewer(0), new SolidColorBrush(Color.FromRgb(56, 189, 248))));
+            // 5. Sensor Hardware
+            cm.Items.Add(CreateModernMenuItem("Sensor Hardware", LucideIcon.Activity, () => OpenHardwareInspectorWindow(), new SolidColorBrush(Color.FromRgb(56, 189, 248))));
 
-            // 6. Pengaturan
+            // 6. Lihat Laporan
+            cm.Items.Add(CreateModernMenuItem("Lihat Laporan", LucideIcon.BarChart, () => OpenReportViewer(0), new SolidColorBrush(Color.FromRgb(74, 222, 128))));
+
+            // 7. Pengaturan
             cm.Items.Add(CreateModernMenuItem("Pengaturan", LucideIcon.Settings, () => OpenSettingsWindow(), new SolidColorBrush(Color.FromRgb(168, 85, 247))));
 
             cm.Items.Add(CreateModernMenuSeparator());
@@ -483,6 +487,9 @@ namespace WattMonitor
 
             // Controls (Report, Pin, Lock, Minimize, Close)
             StackPanel actionsSp = new StackPanel { Orientation = Orientation.Horizontal };
+
+            Button btnInspector = CreateIconButton(LucideIcon.Activity, "Sensor Hardware", () => OpenHardwareInspectorWindow());
+            actionsSp.Children.Add(btnInspector);
 
             Button btnReport = CreateIconButton(LucideIcon.BarChart, "Buka Laporan Pemakaian & Biaya", () => OpenReportViewer(0));
             actionsSp.Children.Add(btnReport);
@@ -1003,7 +1010,12 @@ namespace WattMonitor
 
         private ReportViewerWindow reportViewerWindow;
         private SettingsWindow settingsWindow;
+        private HardwareInspectorWindow hardwareInspectorWindow;
         private double lastTotalWatt = 0;
+        private double lastCpuWatt = 0;
+        private double? lastCpuTemp = null;
+        private double lastGpuWatt = 0;
+        private double? lastGpuTemp = null;
 
         public LiveSessionSnapshot GetLiveSnapshot()
         {
@@ -1054,7 +1066,33 @@ namespace WattMonitor
             }
         }
 
-        public void OpenSettingsWindow()
+        public void OpenHardwareInspectorWindow()
+        {
+            try
+            {
+                if (hardwareInspectorWindow == null || !hardwareInspectorWindow.IsLoaded)
+                {
+                    hardwareInspectorWindow = new HardwareInspectorWindow(
+                        hardwareScanner,
+                        () => OpenSettingsWindow(3)
+                    );
+                    hardwareInspectorWindow.Closed += (s, e) => hardwareInspectorWindow = null;
+                    hardwareInspectorWindow.Show();
+                }
+                else
+                {
+                    if (hardwareInspectorWindow.WindowState == WindowState.Minimized)
+                        hardwareInspectorWindow.WindowState = WindowState.Normal;
+                    hardwareInspectorWindow.Activate();
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Gagal membuka HardwareInspectorWindow", ex);
+            }
+        }
+
+        public void OpenSettingsWindow(int initialTab = 0)
         {
             try
             {
@@ -1063,12 +1101,13 @@ namespace WattMonitor
                     settingsWindow = new SettingsWindow(() =>
                     {
                         ApplyConfigChanges();
-                    });
+                    }, initialTab);
                     settingsWindow.Closed += (s, e) => settingsWindow = null;
                     settingsWindow.Show();
                 }
                 else
                 {
+                    settingsWindow.SelectTab(initialTab);
                     if (settingsWindow.WindowState == WindowState.Minimized)
                         settingsWindow.WindowState = WindowState.Normal;
                     settingsWindow.Activate();
@@ -1141,8 +1180,7 @@ namespace WattMonitor
             catch (Exception ex)
             {
                 AppLogger.Error("Gagal membuka HardwareScanner di WPF.", ex);
-                WinForms.MessageBox.Show("Gagal mengakses sensor hardware. Pastikan Run as Administrator!\n\n" + ex.Message,
-                    "Error", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Error);
+                ModernDialog.Show("Gagal Akses Sensor", "Gagal mengakses sensor hardware. Pastikan aplikasi dijalankan dengan hak administrator!\n\n" + ex.Message, this, true);
                 System.Windows.Application.Current.Shutdown();
                 return;
             }
@@ -1207,7 +1245,7 @@ namespace WattMonitor
             isUpdatingHardware = true;
             try
             {
-                var res = await System.Threading.Tasks.Task.Run(() => hardwareScanner.Update(Config.ExcludeTexts, Config.StaticPeripherals));
+                var res = await System.Threading.Tasks.Task.Run(() => hardwareScanner.Update(Config.Components));
                 DateTime now = DateTime.Now;
 
                 // Day rollover check
@@ -1248,11 +1286,6 @@ namespace WattMonitor
                     {
                         if (!accumulatedHardwareKwh.ContainsKey(hw.Name)) accumulatedHardwareKwh[hw.Name] = 0;
                         accumulatedHardwareKwh[hw.Name] += (hw.Watt / 1000.0) * elapsed;
-                    }
-                    foreach (var st in Config.StaticPeripherals)
-                    {
-                        if (!accumulatedHardwareKwh.ContainsKey(st.Key)) accumulatedHardwareKwh[st.Key] = 0;
-                        accumulatedHardwareKwh[st.Key] += (st.Value / 1000.0) * elapsed;
                     }
                 }
 
@@ -1303,6 +1336,11 @@ namespace WattMonitor
                 }
             }
 
+            this.lastCpuWatt = cpuWatt;
+            this.lastCpuTemp = cpuTemp;
+            this.lastGpuWatt = gpuWatt;
+            this.lastGpuTemp = gpuTemp;
+
             // 1. UPDATE MINIMALIST HUD
             if (currentViewMode == ViewMode.Minimalist)
             {
@@ -1347,36 +1385,25 @@ namespace WattMonitor
             fullPbGpuWatt.Value = Math.Min(250, gpuWatt);
 
             // Monitor Stats (Page 1)
-            string monitorKey = null;
-            double monitorWatt = 0;
-            foreach (var st in Config.StaticPeripherals)
+            HardwareSensorData monitorSensor = null;
+            foreach (var s in sensors)
             {
-                string lower = st.Key.ToLower();
+                string lower = s.Name.ToLower();
                 if (lower.Contains("monitor") || lower.Contains("display") || lower.Contains("screen") ||
                     lower.Contains("lg") || lower.Contains("samsung") || lower.Contains("asus") ||
                     lower.Contains("dell") || lower.Contains("benq") || lower.Contains("acer") ||
-                    lower.Contains("viewsonic") || lower.Contains("aoc"))
+                    lower.Contains("viewsonic") || lower.Contains("aoc") || lower.Contains("ultragear"))
                 {
-                    monitorKey = st.Key;
-                    monitorWatt = st.Value;
+                    monitorSensor = s;
                     break;
                 }
             }
-            if (monitorKey == null && Config.StaticPeripherals.Count > 0)
-            {
-                var enumerator = Config.StaticPeripherals.GetEnumerator();
-                if (enumerator.MoveNext())
-                {
-                    monitorKey = enumerator.Current.Key;
-                    monitorWatt = enumerator.Current.Value;
-                }
-            }
 
-            if (monitorKey != null)
+            if (monitorSensor != null)
             {
-                fullTxtMonitorName.Text = " " + monitorKey;
-                fullTxtMonitorWatt.Text = string.Format("{0:F1} W", monitorWatt);
-                fullPbMonitorWatt.Value = Math.Min(100, monitorWatt);
+                fullTxtMonitorName.Text = " " + monitorSensor.Name;
+                fullTxtMonitorWatt.Text = string.Format("{0:F1} W", monitorSensor.Watt);
+                fullPbMonitorWatt.Value = Math.Min(100, monitorSensor.Watt);
             }
             else
             {
@@ -1396,15 +1423,10 @@ namespace WattMonitor
             {
                 if (s.Type == HardwareType.Cpu || s.Type == HardwareType.GpuNvidia || s.Type == HardwareType.GpuAmd || s.Type == HardwareType.GpuIntel)
                     continue;
-
-                fullHwSensorsContainer.Children.Add(CreateHardwareSensorRow(s.Name, s.Watt, s.Temp));
-            }
-            foreach (var st in Config.StaticPeripherals)
-            {
-                if (monitorKey != null && st.Key == monitorKey)
+                if (monitorSensor != null && s.Name == monitorSensor.Name)
                     continue;
 
-                fullHwSensorsContainer.Children.Add(CreateHardwareSensorRow(st.Key, st.Value, null, true));
+                fullHwSensorsContainer.Children.Add(CreateHardwareSensorRow(s.Name, s.Watt, s.Temp, !s.IsLiveSensor));
             }
 
             if (fullHwSensorsContainer.Children.Count == 0)
@@ -1483,6 +1505,11 @@ namespace WattMonitor
             {
                 try { settingsWindow.Close(); } catch { }
                 settingsWindow = null;
+            }
+            if (hardwareInspectorWindow != null)
+            {
+                try { hardwareInspectorWindow.Close(); } catch { }
+                hardwareInspectorWindow = null;
             }
             if (updateTimer != null) updateTimer.Stop();
             if (autosaveTimer != null) autosaveTimer.Stop();

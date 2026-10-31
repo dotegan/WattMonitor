@@ -32,11 +32,51 @@ namespace WattMonitor
         public static double GpuWattOrange = 95;
         public static double GpuWattRed = 130;
         
-        public static List<string> ExcludeTexts = new List<string> {
-            "NVIDIA GeForce", "(TM)", "Processor", "Intel Core",
-            "8-Core", "16-Core", "12-Core", "6-Core", "4-Core"
-        };
-        public static Dictionary<string, double> StaticPeripherals = new Dictionary<string, double>();
+        // Komponen Hardware Hasil Deteksi & Estimasi
+        public static List<HardwareComponentConfig> Components = new List<HardwareComponentConfig>();
+
+        // Kompatibilitas mundur untuk peripheral statis jika dibutuhkan
+        public static Dictionary<string, double> StaticPeripherals
+        {
+            get
+            {
+                var dict = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+                foreach (var c in Components)
+                {
+                    if (c.IsEnabled && !c.IsLiveSensor)
+                    {
+                        dict[c.Name] = c.EstimatedWatt;
+                    }
+                }
+                return dict;
+            }
+        }
+
+        public static bool IsComponentEnabled(string category, string name = null)
+        {
+            if (Components == null || Components.Count == 0) return true;
+
+            foreach (var c in Components)
+            {
+                if (string.Equals(c.Category, category, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        if (string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase) ||
+                            name.IndexOf(c.Name, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                            c.Name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            return c.IsEnabled;
+                        }
+                    }
+                    else
+                    {
+                        return c.IsEnabled;
+                    }
+                }
+            }
+            return true;
+        }
 
         public static string GetConfigPath()
         {
@@ -78,7 +118,12 @@ namespace WattMonitor
                 if (File.Exists(txtPath))
                 {
                     LoadFromLegacyTxt(txtPath);
-                    // Otomatis migrasi ke config.json
+                    Save();
+                }
+                else
+                {
+                    // Inisialisasi awal jika belum ada file konfigurasi
+                    Components = HardwareDetector.DetectAll();
                     Save();
                 }
             }
@@ -121,17 +166,69 @@ namespace WattMonitor
             if (TryExtractDouble(json, "GpuWattOrange", out dVal) || TryExtractDouble(json, "gpu_watt_orange", out dVal)) GpuWattOrange = dVal;
             if (TryExtractDouble(json, "GpuWattRed", out dVal) || TryExtractDouble(json, "gpu_watt_red", out dVal)) GpuWattRed = dVal;
 
-            var excludes = ExtractStringArray(json, "ExcludeTexts");
-            if (excludes != null && excludes.Count > 0)
-            {
-                ExcludeTexts = excludes;
-            }
+            // Memuat daftar Komponen Terdeteksi & Estimasi secara Portable
+            var parsedComponents = ExtractComponentsArray(json, "Components");
+            var detected = HardwareDetector.DetectAll();
 
-            var periphs = ExtractObjectDictionary(json, "Peripheral");
-            if (periphs == null || periphs.Count == 0) periphs = ExtractObjectDictionary(json, "Peripherals");
-            if (periphs != null && periphs.Count > 0)
+            if (parsedComponents != null && parsedComponents.Count > 0)
             {
-                StaticPeripherals = periphs;
+                // Cek apakah PC saat ini sama dengan profil komponen yang tersimpan di config
+                var detectedCpu = detected.Find(d => d.Category == "CPU");
+                var savedCpu = parsedComponents.Find(p => p.Category == "CPU");
+                bool isSamePc = (detectedCpu != null && savedCpu != null && 
+                    (string.Equals(detectedCpu.Name, savedCpu.Name, StringComparison.OrdinalIgnoreCase) ||
+                     detectedCpu.Name.IndexOf(savedCpu.Name, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     savedCpu.Name.IndexOf(detectedCpu.Name, StringComparison.OrdinalIgnoreCase) >= 0));
+
+                if (isSamePc)
+                {
+                    // PC yang sama: pertahankan toggle aktif/nonaktif dan kustomisasi user
+                    Components = HardwareDetector.MergeWithExisting(parsedComponents, detected);
+                }
+                else
+                {
+                    // PORTABLE: Berpindah ke PC/Laptop baru! Otomatis gunakan spesifikasi PC baru
+                    AppLogger.Info("Terdeteksi berpindah ke PC baru (" + (detectedCpu != null ? detectedCpu.Name : "Unknown") + "). Mengadaptasi hardware baru...");
+                    Components = detected;
+                    Save();
+                }
+            }
+            else
+            {
+                // Jika file config belum punya array Components:
+                var legacyPeriphs = ExtractObjectDictionary(json, "Peripheral");
+                if (legacyPeriphs == null || legacyPeriphs.Count == 0) legacyPeriphs = ExtractObjectDictionary(json, "Peripherals");
+
+                if (legacyPeriphs != null && legacyPeriphs.Count > 0)
+                {
+                    var matchedLegacy = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var det in detected)
+                    {
+                        foreach (var kvp in legacyPeriphs)
+                        {
+                            if (det.Name.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                kvp.Key.IndexOf(det.Name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                if (!det.IsLiveSensor) det.EstimatedWatt = kvp.Value;
+                                matchedLegacy.Add(kvp.Key);
+                                break;
+                            }
+                        }
+                    }
+
+                    // Tambahkan sisa peripheral manual lama yang belum masuk deteksi
+                    foreach (var kvp in legacyPeriphs)
+                    {
+                        if (!matchedLegacy.Contains(kvp.Key))
+                        {
+                            detected.Add(new HardwareComponentConfig(kvp.Key, "Custom", false, kvp.Value, true));
+                        }
+                    }
+                }
+
+                Components = detected;
+                Save(); // Simpan format baru
             }
         }
 
@@ -180,9 +277,48 @@ namespace WattMonitor
             return false;
         }
 
-        private static List<string> ExtractStringArray(string json, string key)
+        private static bool TryExtractBool(string json, string key, out bool value)
         {
-            var list = new List<string>();
+            value = true;
+            string token = "\"" + key + "\"";
+            int idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return false;
+
+            int colon = json.IndexOf(':', idx + token.Length);
+            if (colon < 0) return false;
+
+            int s = colon + 1;
+            while (s < json.Length && char.IsWhiteSpace(json[s])) s++;
+            if (s < json.Length)
+            {
+                string rest = json.Substring(s);
+                if (rest.StartsWith("true", StringComparison.OrdinalIgnoreCase)) { value = true; return true; }
+                if (rest.StartsWith("false", StringComparison.OrdinalIgnoreCase)) { value = false; return true; }
+            }
+            return false;
+        }
+
+        private static string ExtractStringValue(string json, string key)
+        {
+            string token = "\"" + key + "\"";
+            int idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return "";
+
+            int colon = json.IndexOf(':', idx + token.Length);
+            if (colon < 0) return "";
+
+            int q1 = json.IndexOf('\"', colon + 1);
+            if (q1 < 0) return "";
+
+            int q2 = json.IndexOf('\"', q1 + 1);
+            if (q2 < 0) return "";
+
+            return json.Substring(q1 + 1, q2 - q1 - 1).Trim();
+        }
+
+        private static List<HardwareComponentConfig> ExtractComponentsArray(string json, string key)
+        {
+            var list = new List<HardwareComponentConfig>();
             string token = "\"" + key + "\"";
             int idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) return list;
@@ -190,22 +326,72 @@ namespace WattMonitor
             int openBracket = json.IndexOf('[', idx + token.Length);
             if (openBracket < 0) return list;
 
-            int closeBracket = json.IndexOf(']', openBracket + 1);
+            int closeBracket = -1;
+            int depth = 0;
+            for (int i = openBracket; i < json.Length; i++)
+            {
+                if (json[i] == '[') depth++;
+                else if (json[i] == ']')
+                {
+                    depth--;
+                    if (depth == 0) { closeBracket = i; break; }
+                }
+            }
             if (closeBracket < 0) return list;
 
-            string arrayContent = json.Substring(openBracket + 1, closeBracket - openBracket - 1);
+            string content = json.Substring(openBracket + 1, closeBracket - openBracket - 1);
             int p = 0;
-            while (p < arrayContent.Length)
+            while (p < content.Length)
             {
-                int q1 = arrayContent.IndexOf('\"', p);
-                if (q1 < 0) break;
-                int q2 = arrayContent.IndexOf('\"', q1 + 1);
-                if (q2 < 0) break;
+                int ob = content.IndexOf('{', p);
+                if (ob < 0) break;
+                int cb = -1;
+                int bDepth = 0;
+                for (int i = ob; i < content.Length; i++)
+                {
+                    if (content[i] == '{') bDepth++;
+                    else if (content[i] == '}')
+                    {
+                        bDepth--;
+                        if (bDepth == 0) { cb = i; break; }
+                    }
+                }
+                if (cb < 0) break;
 
-                string item = arrayContent.Substring(q1 + 1, q2 - q1 - 1).Trim();
-                if (!string.IsNullOrEmpty(item)) list.Add(item);
-                p = q2 + 1;
+                string itemJson = content.Substring(ob, cb - ob + 1);
+                string name = ExtractStringValue(itemJson, "Name");
+                string cat = ExtractStringValue(itemJson, "Category");
+                bool enabled = true;
+                TryExtractBool(itemJson, "IsEnabled", out enabled);
+                double watt = 0;
+                if (!TryExtractDouble(itemJson, "Watt", out watt))
+                {
+                    TryExtractDouble(itemJson, "EstimatedWatt", out watt);
+                }
+                bool isLive = false;
+                if (!TryExtractBool(itemJson, "IsLive", out isLive))
+                {
+                    TryExtractBool(itemJson, "IsLiveSensor", out isLive);
+                }
+                bool isCustom = false;
+                TryExtractBool(itemJson, "IsCustom", out isCustom);
+
+                if (!string.IsNullOrEmpty(name))
+                {
+                    list.Add(new HardwareComponentConfig
+                    {
+                        Name = name,
+                        Category = string.IsNullOrEmpty(cat) ? "Custom" : cat,
+                        IsEnabled = enabled,
+                        EstimatedWatt = watt,
+                        IsLiveSensor = isLive,
+                        IsCustom = isCustom
+                    });
+                }
+
+                p = cb + 1;
             }
+
             return list;
         }
 
@@ -266,7 +452,7 @@ namespace WattMonitor
 
         private static void LoadFromLegacyTxt(string configPath)
         {
-            bool excludeCleared = false;
+            var periphs = new Dictionary<string, double>();
             bool inPeripheralBlock = false;
 
             foreach (string line in File.ReadAllLines(configPath))
@@ -296,7 +482,7 @@ namespace WattMonitor
                 {
                     double pVal;
                     if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out pVal))
-                        StaticPeripherals[key] = pVal;
+                        periphs[key] = pVal;
                     continue;
                 }
 
@@ -311,10 +497,6 @@ namespace WattMonitor
                     case "opacity": if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out pd)) Opacity = Math.Max(0.1, Math.Min(1.0, pd)); break;
                     case "watt_offset": if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out pd)) WattOffset = pd; break;
                     case "consolewidth": if (int.TryParse(value, out pi)) ConsoleWidth = Math.Max(20, pi); break;
-                    case "excludetexts":
-                        if (!excludeCleared) { ExcludeTexts.Clear(); excludeCleared = true; }
-                        foreach (string s in value.Split(',')) if (!string.IsNullOrWhiteSpace(s)) ExcludeTexts.Add(s.Trim());
-                        break;
                     case "minimalist_fontsize": float mf; if (float.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out mf)) MinimalistFontSize = mf; break;
                     case "minimalist_width": if (int.TryParse(value, out pi)) MinimalistWidth = pi; break;
                     case "minimalist_height": if (int.TryParse(value, out pi)) MinimalistHeight = pi; break;
@@ -329,6 +511,21 @@ namespace WattMonitor
                     case "gpu_watt_red": if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out pd)) GpuWattRed = pd; break;
                 }
             }
+
+            var detected = HardwareDetector.DetectAll();
+            foreach (var kvp in periphs)
+            {
+                var match = detected.Find(d => d.Name.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (match != null && !match.IsLiveSensor)
+                {
+                    match.EstimatedWatt = kvp.Value;
+                }
+                else
+                {
+                    detected.Add(new HardwareComponentConfig(kvp.Key, "Custom", false, kvp.Value, true));
+                }
+            }
+            Components = detected;
         }
 
         public static void Save()
@@ -363,25 +560,21 @@ namespace WattMonitor
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "    \"GpuWattOrange\": {0:0.##},", GpuWattOrange));
                 sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "    \"GpuWattRed\": {0:0.##}", GpuWattRed));
                 sb.AppendLine("  },");
-                sb.AppendLine("  \"Filter\": {");
-                sb.AppendLine("    \"ExcludeTexts\": [");
-                for (int i = 0; i < ExcludeTexts.Count; i++)
+                sb.AppendLine("  \"Components\": [");
+                for (int i = 0; i < Components.Count; i++)
                 {
-                    string comma = (i < ExcludeTexts.Count - 1) ? "," : "";
-                    sb.AppendLine(string.Format("      \"{0}\"{1}", ExcludeTexts[i].Replace("\"", "\\\""), comma));
+                    var c = Components[i];
+                    string comma = (i < Components.Count - 1) ? "," : "";
+                    sb.AppendLine("    {");
+                    sb.AppendLine(string.Format("      \"Name\": \"{0}\",", (c.Name ?? "").Replace("\"", "\\\"")));
+                    sb.AppendLine(string.Format("      \"Category\": \"{0}\",", (c.Category ?? "").Replace("\"", "\\\"")));
+                    sb.AppendLine(string.Format("      \"IsEnabled\": {0},", c.IsEnabled ? "true" : "false"));
+                    sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "      \"Watt\": {0:0.##},", c.EstimatedWatt));
+                    sb.AppendLine(string.Format("      \"IsLive\": {0},", c.IsLiveSensor ? "true" : "false"));
+                    sb.AppendLine(string.Format("      \"IsCustom\": {0}", c.IsCustom ? "true" : "false"));
+                    sb.AppendLine("    }" + comma);
                 }
-                sb.AppendLine("    ]");
-                sb.AppendLine("  },");
-                sb.AppendLine("  \"Peripheral\": {");
-                int pIdx = 0;
-                int pCount = StaticPeripherals.Count;
-                foreach (var kvp in StaticPeripherals)
-                {
-                    string comma = (pIdx < pCount - 1) ? "," : "";
-                    sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "    \"{0}\": {1:0.##}{2}", kvp.Key.Replace("\"", "\\\""), kvp.Value, comma));
-                    pIdx++;
-                }
-                sb.AppendLine("  }");
+                sb.AppendLine("  ]");
                 sb.AppendLine("}");
 
                 File.WriteAllText(path, sb.ToString(), Encoding.UTF8);

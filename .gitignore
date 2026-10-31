@@ -3,6 +3,7 @@
 # ==========================================
 
 # User Personal Data & Logs
+logs/
 system/logs/
 system/laporan/
 *.log

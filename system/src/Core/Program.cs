@@ -31,6 +31,15 @@ namespace WattMonitor
             try
             {
                 Application app = new Application();
+                app.DispatcherUnhandledException += (s, e) =>
+                {
+                    AppLogger.Error("DispatcherUnhandledException", e.Exception);
+                    e.Handled = false;
+                };
+                AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                {
+                    AppLogger.Error("DomainUnhandledException", e.ExceptionObject as Exception);
+                };
                 WattMonitorWpfWindow win = new WattMonitorWpfWindow();
                 app.Run(win);
             }

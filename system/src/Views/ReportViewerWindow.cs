@@ -59,6 +59,7 @@ namespace WattMonitor
             currentTab = initialTab;
             liveDataProvider = liveSnapshotProvider;
 
+            ModernDialog.ApplyDarkToolTipStyle(this);
             BuildUI();
             LoadAvailableMonths();
             RefreshData();
@@ -1037,10 +1038,10 @@ namespace WattMonitor
             cfgCard.Child = cfgSp;
             spInfoContent.Children.Add(cfgCard);
 
-            // SECTION 3: PERIFERAL STATIS & HARDWARE
+            // SECTION 3: KOMPONEN HARDWARE & SPESIFIKASI DAYA
             TextBlock sec3Title = new TextBlock
             {
-                Text = "PERIFERAL STATIS & SPESIFIKASI",
+                Text = "KOMPONEN HARDWARE & SPESIFIKASI DAYA",
                 FontSize = 11,
                 FontFamily = new FontFamily("Segoe UI, Inter"),
                 FontWeight = FontWeights.Bold,
@@ -1060,12 +1061,20 @@ namespace WattMonitor
             };
 
             StackPanel hwInfoSp = new StackPanel();
-            hwInfoSp.Children.Add(CreateInfoRow("Mesin Pemindai", "LibreHardwareMonitorLib (Kernel Sensor Driver)", new SolidColorBrush(Color.FromRgb(56, 189, 248))));
+            hwInfoSp.Children.Add(CreateInfoRow("Mesin Pemindai", "LibreHardwareMonitorLib & WMI Hardware Detector", new SolidColorBrush(Color.FromRgb(56, 189, 248))));
             hwInfoSp.Children.Add(CreateInfoRow("Arsitektur UI", "Native 64-bit WPF (.NET Framework 4.7.2)", Brushes.White));
 
-            foreach (var st in Config.StaticPeripherals)
+            if (Config.Components != null)
             {
-                hwInfoSp.Children.Add(CreateInfoRow("Periferal: " + st.Key, string.Format("{0:F1} Watt", st.Value), new SolidColorBrush(Color.FromRgb(245, 158, 11))));
+                foreach (var c in Config.Components)
+                {
+                    if (c.IsEnabled)
+                    {
+                        string valStr = c.IsLiveSensor ? "Sensor Live (Real-time)" : string.Format("{0:F1} Watt (Estimasi)", c.EstimatedWatt);
+                        Brush b = c.IsLiveSensor ? new SolidColorBrush(Color.FromRgb(52, 211, 153)) : new SolidColorBrush(Color.FromRgb(245, 158, 11));
+                        hwInfoSp.Children.Add(CreateInfoRow(string.Format("[{0}] {1}", c.Category, c.Name), valStr, b));
+                    }
+                }
             }
 
             hwCard.Child = hwInfoSp;

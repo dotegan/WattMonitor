@@ -11,6 +11,7 @@ namespace WattMonitor
         public HardwareType Type { get; set; }
         public double Watt { get; set; }
         public double? Temp { get; set; }
+        public bool IsLiveSensor { get; set; }
     }
 
     public class HardwareUpdateResult
@@ -32,31 +33,58 @@ namespace WattMonitor
                 IsMotherboardEnabled = true,
                 IsControllerEnabled = true,
                 IsMemoryEnabled = true,
-                IsStorageEnabled = false,
-                IsNetworkEnabled = false
+                IsStorageEnabled = true,
+                IsNetworkEnabled = true,
+                IsBatteryEnabled = true,
+                IsPsuEnabled = true
             };
         }
 
         public void Open()
         {
-            computer.Open();
+            try
+            {
+                computer.Open();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Gagal membuka LibreHardwareMonitor Computer: " + ex.Message, ex);
+            }
         }
         
         public void Close()
         {
-            computer.Close();
+            try
+            {
+                computer.Close();
+            }
+            catch { }
         }
         
         public Computer GetComputer() {
             return computer;
         }
 
-        public HardwareUpdateResult Update(List<string> excludeTexts, Dictionary<string, double> staticPeripherals)
+        public List<IHardware> GetHardwareList()
+        {
+            if (computer == null) return new List<IHardware>();
+            try
+            {
+                return new List<IHardware>(computer.Hardware);
+            }
+            catch
+            {
+                return new List<IHardware>();
+            }
+        }
+
+        public HardwareUpdateResult Update(List<HardwareComponentConfig> components)
         {
             double currentTotalWatt = 0;
             var activeSensors = new List<HardwareSensorData>();
             object _lock = new object();
 
+            // 1. Baca sensor live dari LibreHardwareMonitor (CPU & GPU)
             foreach (var hw in computer.Hardware)
             {
                 var allSensors = new List<ISensor>();
@@ -77,7 +105,7 @@ namespace WattMonitor
                 double maxTemp = -100;
                 bool hasTemp = false;
 
-                // Pass 1: Identify power sensors
+                // Pass 1: Identifikasi sensor power
                 var powerSensors = new List<Tuple<string, double>>();
                 bool hasPackage = false;
                 double packageVal = 0;
@@ -93,7 +121,7 @@ namespace WattMonitor
                         if (sName == "package" || sName == "cpu package" || sName == "gpu package" || sName == "total")
                         {
                             hasPackage = true;
-                            packageVal = Math.Max(packageVal, val); // in case there are multiple, take highest
+                            packageVal = Math.Max(packageVal, val);
                         }
                     }
 
@@ -118,7 +146,7 @@ namespace WattMonitor
                     }
                     else
                     {
-                        // Fallback: sum them up, but carefully avoid double counting for CPUs
+                        // Fallback: jumlahkan tanpa double-count untuk CPU
                         foreach (var ps in powerSensors)
                         {
                             string sName = ps.Item1;
@@ -128,7 +156,7 @@ namespace WattMonitor
                     }
                 }
 
-                // Prevent VRM double-counting (Motherboard reports what goes into the CPU)
+                // Hindari double-counting VRM Motherboard
                 if (hw.HardwareType == HardwareType.Motherboard || hw.HardwareType == HardwareType.SuperIO)
                 {
                     hwWatt = 0;
@@ -138,20 +166,37 @@ namespace WattMonitor
 
                 if ((hasPower || hasValidTemp) && !(hwWatt == 0 && !hasValidTemp))
                 {
-                    string name = hw.Name;
+                    string name = Regex.Replace(hw.Name ?? "", @"\s+", " ").Trim();
                     var type = hw.HardwareType;
 
-                    if (type == HardwareType.GpuAmd && name.ToLower().Contains("radeon") && name.ToLower().Contains("graphics"))
+                    // Periksa apakah komponen ini diizinkan aktif oleh pengguna
+                    bool isAllowed = true;
+                    if (type == HardwareType.Cpu)
                     {
-                        type = HardwareType.Cpu;
-                        name = name.Replace("Radeon(TM) Graphics", "Ryzen (iGPU)").Replace("Radeon Graphics", "Ryzen (iGPU)");
+                        isAllowed = Config.IsComponentEnabled("CPU", name);
+                    }
+                    else if (type == HardwareType.GpuNvidia || type == HardwareType.GpuAmd || type == HardwareType.GpuIntel)
+                    {
+                        isAllowed = Config.IsComponentEnabled("GPU", name);
+                    }
+                    else if (type == HardwareType.Storage)
+                    {
+                        isAllowed = Config.IsComponentEnabled("Storage", name);
+                    }
+                    else if (type == HardwareType.Memory)
+                    {
+                        isAllowed = Config.IsComponentEnabled("RAM", name);
+                    }
+                    else if (type == HardwareType.Motherboard)
+                    {
+                        isAllowed = Config.IsComponentEnabled("Motherboard", name);
+                    }
+                    else if (type == HardwareType.Battery)
+                    {
+                        isAllowed = Config.IsComponentEnabled("Battery", name);
                     }
 
-                    foreach (string rm in excludeTexts)
-                        name = Regex.Replace(name, Regex.Escape(rm), "", RegexOptions.IgnoreCase);
-                    name = Regex.Replace(name, @"\s+", " ").Trim();
-
-                    if (!string.IsNullOrEmpty(name))
+                    if (isAllowed && !string.IsNullOrEmpty(name))
                     {
                         double? temp = hasTemp ? (double?)maxTemp : null;
                         lock (_lock)
@@ -160,7 +205,8 @@ namespace WattMonitor
                                 Name = name, 
                                 Type = type, 
                                 Watt = hwWatt, 
-                                Temp = temp
+                                Temp = temp,
+                                IsLiveSensor = true
                             });
                             currentTotalWatt += hwWatt;
                         }
@@ -168,17 +214,36 @@ namespace WattMonitor
                 }
             }
 
-            // Urutkan hardware untuk konsistensi tampilan
+            // 2. Tambahkan komponen statis/estimasi yang tercentang aktif
+            if (components != null)
+            {
+                foreach (var c in components)
+                {
+                    if (!c.IsLiveSensor && c.IsEnabled)
+                    {
+                        activeSensors.Add(new HardwareSensorData
+                        {
+                            Name = c.Name,
+                            Type = MapCategoryToHardwareType(c.Category),
+                            Watt = c.EstimatedWatt,
+                            Temp = null,
+                            IsLiveSensor = false
+                        });
+                        currentTotalWatt += c.EstimatedWatt;
+                    }
+                }
+            }
+
+            // Urutkan hardware untuk konsistensi tampilan (CPU, GPU, Display, Motherboard, RAM, Storage, Lainnya)
             activeSensors.Sort((a, b) =>
             {
-                int typeCompare = a.Type.CompareTo(b.Type);
-                return typeCompare != 0 ? typeCompare : string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                int orderA = GetTypeOrder(a.Type);
+                int orderB = GetTypeOrder(b.Type);
+                int cmp = orderA.CompareTo(orderB);
+                return cmp != 0 ? cmp : string.Compare(a.Name, b.Name, StringComparison.Ordinal);
             });
 
-            // Tambahkan konsumsi peripheral statis
-            double peripheralWatt = 0;
-            foreach (var kv in staticPeripherals) peripheralWatt += kv.Value;
-            currentTotalWatt += peripheralWatt;
+            // Tambahkan watt offset kalibrasi
             currentTotalWatt += Config.WattOffset;
 
             return new HardwareUpdateResult
@@ -186,6 +251,35 @@ namespace WattMonitor
                 CurrentTotalWatt = currentTotalWatt,
                 ActiveSensors = activeSensors
             };
+        }
+
+        private static int GetTypeOrder(HardwareType type)
+        {
+            switch (type)
+            {
+                case HardwareType.Cpu: return 1;
+                case HardwareType.GpuNvidia:
+                case HardwareType.GpuAmd:
+                case HardwareType.GpuIntel: return 2;
+                case HardwareType.Motherboard: return 3;
+                case HardwareType.Memory: return 4;
+                case HardwareType.Storage: return 5;
+                default: return 6;
+            }
+        }
+
+        private static HardwareType MapCategoryToHardwareType(string category)
+        {
+            if (string.IsNullOrEmpty(category)) return HardwareType.SuperIO;
+            switch (category.ToLower())
+            {
+                case "cpu": return HardwareType.Cpu;
+                case "gpu": return HardwareType.GpuNvidia;
+                case "motherboard": return HardwareType.Motherboard;
+                case "ram": return HardwareType.Memory;
+                case "storage": return HardwareType.Storage;
+                default: return HardwareType.SuperIO;
+            }
         }
     }
 }
