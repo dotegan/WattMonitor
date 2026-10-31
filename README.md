@@ -14,26 +14,44 @@ Gak perlu buka software monitoring berat nan ribet kalau cuma mau ngecek PC lagi
 
 <table>
   <tr>
-    <td align="center" width="33%">
+    <td align="center" width="50%">
       <a href="assets/ss-app-1.png">
-        <img src="assets/ss-app-1.png" alt="Minimalist HUD" style="max-width: 100%;" />
+        <img src="assets/ss-app-1.png" alt="Full Dashboard" style="max-width: 100%;" />
       </a>
       <br />
-      <sub><b>Minimalist HUD</b> (Klik untuk perbesar)</sub>
+      <sub><b>Full Dashboard (Monitoring Watt & Biaya)</b></sub>
     </td>
-    <td align="center" width="33%">
+    <td align="center" width="50%">
       <a href="assets/ss-app-2.png">
-        <img src="assets/ss-app-2.png" alt="Full Dashboard & Context Menu" style="max-width: 100%;" />
+        <img src="assets/ss-app-2.png" alt="Minimalist HUD" style="max-width: 100%;" />
       </a>
       <br />
-      <sub><b>Full Dashboard & Menu</b> (Klik untuk perbesar)</sub>
+      <sub><b>Minimalist HUD Overlay</b></sub>
     </td>
-    <td align="center" width="33%">
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <a href="assets/ss-app-3.png">
-        <img src="assets/ss-app-3.png" alt="Laporan Pemakaian & Statistik" style="max-width: 100%;" />
+        <img src="assets/ss-app-3.png" alt="Sensor Hardware" style="max-width: 100%;" />
       </a>
       <br />
-      <sub><b>Laporan & Statistik</b> (Klik untuk perbesar)</sub>
+      <sub><b>Sensor Hardware (Live Telemetri & Multi-Sort)</b></sub>
+    </td>
+    <td align="center" width="50%">
+      <a href="assets/ss-app-4.png">
+        <img src="assets/ss-app-4.png" alt="Pengaturan & Deteksi Hardware" style="max-width: 100%;" />
+      </a>
+      <br />
+      <sub><b>Pengaturan & Deteksi Komponen Otomatis</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <a href="assets/ss-app-5.png">
+        <img src="assets/ss-app-5.png" alt="Laporan Pemakaian & Biaya" style="max-width: 100%;" />
+      </a>
+      <br />
+      <sub><b>Laporan Riwayat Pemakaian & Statistik Bulanan</b></sub>
     </td>
   </tr>
 </table>
